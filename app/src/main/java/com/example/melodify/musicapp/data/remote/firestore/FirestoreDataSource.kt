@@ -196,6 +196,21 @@ class FirestoreDataSource @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    fun observeAllMessages(userId: String): Flow<List<Message>> = callbackFlow {
+        val listener = firestore.collection("messages")
+            .whereIn("senderId", listOf(userId, "dummy"))
+
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val messages = snapshot?.documents?.mapNotNull { it.toObject<Message>() } ?: emptyList()
+                trySend(messages)
+            }
+        awaitClose { listener.remove() }
+    }
+
     // mark as read
     suspend fun markMessageAsSeen(messageId: String) {
         firestore.collection("messages").document(messageId)
