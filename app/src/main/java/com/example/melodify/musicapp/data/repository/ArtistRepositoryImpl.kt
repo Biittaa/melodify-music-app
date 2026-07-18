@@ -8,6 +8,10 @@ import com.melodify.musicapp.domain.repository.ArtistRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of ArtistRepository
+ * Manages artist data and follow/unfollow from Firestore
+ */
 @Singleton
 class ArtistRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -15,26 +19,29 @@ class ArtistRepositoryImpl @Inject constructor(
 ) : ArtistRepository {
 
     override suspend fun getArtists(): List<Artist> {
-        // should make a collection of artists
-        // optional, implement if needed
+        // TODO: Implement artists collection in Firestore
         return emptyList()
     }
 
     override suspend fun getArtist(id: String): Artist {
-        // return firestoreDataSource.getArtist(id)
+        // TODO: Implement getArtist in Firestore
         throw Exception("Not implemented yet")
     }
 
     override suspend fun getArtistSongs(id: String): List<Song> {
-        // return firestoreDataSource.getArtistSongs(id)
+        // TODO: Implement getArtistSongs in Firestore
         return emptyList()
     }
 
     override suspend fun followArtist(id: String) {
-        // like follow user
+        // Similar to follow user implementation
+        val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
+        // firestoreDataSource.followArtist(currentUserId, id)
     }
 
     override suspend fun unfollowArtist(id: String) {
-        // like unfollow user
+        // Similar to unfollow user implementation
+        val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
+        // firestoreDataSource.unfollowArtist(currentUserId, id)
     }
 }

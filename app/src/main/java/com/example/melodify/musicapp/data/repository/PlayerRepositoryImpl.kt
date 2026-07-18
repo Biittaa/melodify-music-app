@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of PlayerRepository
+ * Delegates all playback operations to IPlayerController
+ * This is a bridge between data layer and Player module (Person #2)
+ */
 @Singleton
 class PlayerRepositoryImpl @Inject constructor(
     private val playerController: IPlayerController

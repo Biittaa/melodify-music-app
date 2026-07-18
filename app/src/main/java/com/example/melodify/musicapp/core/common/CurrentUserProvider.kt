@@ -6,6 +6,7 @@ import javax.inject.Singleton
 
 @Singleton
 class CurrentUserProvider @Inject constructor() {
+
     private var currentUser: User? = null
 
     fun setUser(user: User) {
@@ -16,5 +17,13 @@ class CurrentUserProvider @Inject constructor() {
 
     fun clear() {
         currentUser = null
+    }
+
+    fun isCurrentUserPremium(): Boolean {
+        return currentUser?.isPremium == true
+    }
+
+    fun isLoggedIn(): Boolean {
+        return currentUser != null
     }
 }

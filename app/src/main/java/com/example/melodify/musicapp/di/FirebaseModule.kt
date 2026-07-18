@@ -9,17 +9,31 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Hilt module for providing Firebase instances
+ * Provides FirebaseAuth, FirebaseFirestore, and FirebaseStorage as singletons
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object FirebaseModule {
+
+    /**
+     * Provides FirebaseAuth instance
+     */
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
+    /**
+     * Provides FirebaseFirestore instance
+     */
     @Provides
     @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
+    /**
+     * Provides FirebaseStorage instance
+     */
     @Provides
     @Singleton
     fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()

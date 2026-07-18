@@ -7,6 +7,10 @@ import com.melodify.musicapp.domain.repository.NotificationRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of NotificationRepository
+ * Manages in-app notifications from Firestore
+ */
 @Singleton
 class NotificationRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -14,14 +18,15 @@ class NotificationRepositoryImpl @Inject constructor(
 ) : NotificationRepository {
 
     override suspend fun getNotifications(): List<Notification> {
-        // recieve from Firebase
+        // TODO: Implement notifications collection in Firestore
         return emptyList()
     }
 
     override suspend fun markAsRead(id: String) {
-        // update Firestore
+        // TODO: Update notification read status in Firestore
     }
 
     override suspend fun clearAll() {
+        // TODO: Delete all notifications for current user
     }
 }

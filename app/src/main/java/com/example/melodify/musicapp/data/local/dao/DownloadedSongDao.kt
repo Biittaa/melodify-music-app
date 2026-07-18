@@ -1,3 +1,9 @@
+package com.melodify.musicapp.data.local.dao
+
+import androidx.room.*
+import com.melodify.musicapp.data.local.entity.DownloadedSongEntity
+import kotlinx.coroutines.flow.Flow
+
 @Dao
 interface DownloadedSongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

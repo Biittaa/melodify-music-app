@@ -13,6 +13,11 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of SearchRepository
+ * Handles search across songs, artists, albums, users
+ * Also manages search history persistence with Room
+ */
 @Singleton
 class SearchRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -24,15 +29,17 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchArtists(query: String): List<Artist> {
-        // implement with Firebase
+        // TODO: Implement artist search in Firestore
         return emptyList()
     }
 
     override suspend fun searchAlbums(query: String): List<Album> {
+        // TODO: Implement album search in Firestore
         return emptyList()
     }
 
     override suspend fun searchUsers(query: String): List<User> {
+        // TODO: Implement user search in Firestore
         return emptyList()
     }
 

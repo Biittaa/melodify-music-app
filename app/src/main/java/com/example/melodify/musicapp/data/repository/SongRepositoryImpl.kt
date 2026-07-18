@@ -1,8 +1,11 @@
 package com.melodify.musicapp.data.repository
 
+import androidx.paging.PagingSource
+import com.google.firebase.firestore.DocumentSnapshot
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.data.local.dao.LikedSongDao
 import com.melodify.musicapp.data.local.entity.LikedSongEntity
+import com.melodify.musicapp.data.paging.SongSearchPagingSource
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
@@ -10,6 +13,10 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of SongRepository
+ * Manages songs, likes, and offline caching with Room
+ */
 @Singleton
 class SongRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -33,11 +40,18 @@ class SongRepositoryImpl @Inject constructor(
         return firestoreDataSource.searchSongs(query)
     }
 
+    override fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot?, Song> {
+        return SongSearchPagingSource(
+            firestore = firestoreDataSource.firestore,
+            query = query
+        )
+    }
+
     override suspend fun likeSong(songId: String) {
         val userId = currentUserProvider.getCurrentUser()?.id ?: return
-        // 1- send to Firebase
+        // 1. Send to Firestore
         firestoreDataSource.likeSong(userId, songId)
-        // 2- save in Room (offline)
+        // 2. Save to Room (offline cache)
         val song = getSong(songId)
         likedSongDao.insert(
             LikedSongEntity(
@@ -57,13 +71,14 @@ class SongRepositoryImpl @Inject constructor(
 
     override suspend fun unlikeSong(songId: String) {
         val userId = currentUserProvider.getCurrentUser()?.id ?: return
-        // 1- remove from Firebase
+        // 1. Delete from Firestore
         firestoreDataSource.unlikeSong(userId, songId)
-        // 2- remove from Room
+        // 2. Delete from Room
         likedSongDao.delete(LikedSongEntity(songId, "", "", "", "", "", 0, "", 0, 0))
     }
 
     override suspend fun getLikedSongs(): List<Song> {
+        // Fetch from Room (offline first)
         val entities = likedSongDao.getAll().firstOrNull() ?: emptyList()
         return entities.map { entity ->
             Song(
@@ -83,11 +98,7 @@ class SongRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRecentlyPlayed(): List<Song> {
-        // optional
+        // Can be implemented with DataStore or Room (optional)
         return emptyList()
-    }
-
-    override fun searchSongsPaging(query: String): PagingSource<Int, Song> {
-        return SongSearchPagingSource(firestore, query)
     }
 }

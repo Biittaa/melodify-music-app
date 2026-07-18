@@ -7,24 +7,27 @@ import com.melodify.musicapp.domain.repository.AlbumRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Implementation of AlbumRepository
+ * Manages album data from Firestore
+ */
 @Singleton
 class AlbumRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource
 ) : AlbumRepository {
 
     override suspend fun getAlbums(): List<Album> {
-        // should make a collection of albums in Firebase
-        // optional, implement if needed
+        // TODO: Implement albums collection in Firestore
         return emptyList()
     }
 
     override suspend fun getAlbum(albumId: String): Album {
-        // return firestoreDataSource.getAlbum(albumId)
+        // TODO: Implement getAlbum in Firestore
         throw Exception("Not implemented yet")
     }
 
     override suspend fun getAlbumSongs(albumId: String): List<Song> {
-        // return firestoreDataSource.getAlbumSongs(albumId)
+        // TODO: Implement getAlbumSongs in Firestore
         return emptyList()
     }
 }

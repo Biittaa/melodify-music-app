@@ -1,6 +1,7 @@
 package com.melodify.musicapp.data.local.dao
 
 import androidx.room.*
+import com.melodify.musicapp.data.local.entity.SearchHistoryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

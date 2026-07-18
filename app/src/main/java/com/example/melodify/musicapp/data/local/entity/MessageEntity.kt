@@ -1,3 +1,8 @@
+package com.melodify.musicapp.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 @Entity(tableName = "messages")
 data class MessageEntity(
     @PrimaryKey val id: String,
@@ -7,5 +12,5 @@ data class MessageEntity(
     val songId: String?,
     val createdAt: Long,
     val isSeen: Boolean,
-    val isSent: Boolean // User sent
+    val isSent: Boolean
 )
