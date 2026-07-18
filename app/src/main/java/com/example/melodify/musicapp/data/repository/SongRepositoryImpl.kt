@@ -86,4 +86,8 @@ class SongRepositoryImpl @Inject constructor(
         // optional
         return emptyList()
     }
+
+    override fun searchSongsPaging(query: String): PagingSource<Int, Song> {
+        return SongSearchPagingSource(firestore, query)
+    }
 }

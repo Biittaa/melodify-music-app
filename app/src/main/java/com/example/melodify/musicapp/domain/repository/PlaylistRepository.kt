@@ -11,4 +11,6 @@ interface PlaylistRepository {
     suspend fun addSong(playlistId: String, songId: String)
     suspend fun removeSong(playlistId: String, songId: String)
     suspend fun getPlaylistSongs(playlistId: String): List<Song>
+
+    fun getPlaylistSongsPaging(playlistId: String): PagingSource<Int, Song>
 }

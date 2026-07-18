@@ -27,6 +27,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun conversationDao(): ConversationDao
 
+    abstract fun playlistSongDao(): PlaylistSongDao
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

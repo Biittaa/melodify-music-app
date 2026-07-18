@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
     suspend fun getConversations(): List<Conversation>
-    suspend fun getMessages(userId: String): List<Message>    // برای Paging
+    suspend fun getMessages(userId: String): List<Message>
     suspend fun sendMessage(receiverId: String, text: String)
     suspend fun sendSong(receiverId: String, songId: String)
     suspend fun markAsRead(messageId: String)
     fun observeMessages(userId: String): Flow<List<Message>>  // Real-time
+
+    fun getMessagesPaging(userId: String): PagingSource<Int, Message>
 }

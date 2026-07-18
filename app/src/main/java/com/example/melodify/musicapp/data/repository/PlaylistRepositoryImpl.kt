@@ -52,4 +52,17 @@ class PlaylistRepositoryImpl @Inject constructor(
     override suspend fun getPlaylistSongs(playlistId: String): List<Song> {
         return firestoreDataSource.getPlaylistSongs(playlistId)
     }
+
+    override fun getPlaylistSongsPaging(playlistId: String): PagingSource<Int, Song> {
+        return object : PagingSource<Int, Song>() {
+            override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Song> {
+
+                val page = params.key ?: 1
+                val limit = params.loadSize
+
+                return LoadResult.Page(emptyList(), null, null)
+            }
+            override fun getRefreshKey(state: PagingState<Int, Song>): Int? = null
+        }
+    }
 }

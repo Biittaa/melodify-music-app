@@ -14,4 +14,7 @@ interface MessageDao {
 
     @Query("DELETE FROM messages WHERE id = :messageId")
     suspend fun delete(messageId: String)
+
+    @Query("SELECT * FROM messages WHERE (senderId = :userId AND receiverId = :currentUserId) OR (senderId = :currentUserId AND receiverId = :userId) ORDER BY createdAt ASC")
+    fun getMessagesPaging(userId: String, currentUserId: String): PagingSource<Int, MessageEntity>
 }

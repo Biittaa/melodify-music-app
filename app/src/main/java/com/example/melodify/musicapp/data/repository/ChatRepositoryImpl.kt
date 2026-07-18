@@ -141,6 +141,27 @@ class ChatRepositoryImpl @Inject constructor(
         )
         conversationDao.insert(conv)
     }
+
+    override fun getMessagesPaging(userId: String): PagingSource<Int, Message> {
+        val currentUserId = currentUserProvider()?.id ?: return object : PagingSource<Int, Message>() {
+            override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Message> {
+                return LoadResult.Page(emptyList(), null, null)
+            }
+            override fun getRefreshKey(state: PagingState<Int, Message>): Int? = null
+        }
+        val source = messageDao.getMessagesPaging(userId, currentUserId)
+        return source.map { entity ->
+            Message(
+                id = entity.id,
+                senderId = entity.senderId,
+                receiverId = entity.receiverId,
+                text = entity.text,
+                songId = entity.songId,
+                createdAt = entity.createdAt,
+                isSeen = entity.isSeen
+            )
+        }
+    }
 }
 
 // define emptyFlow for preventing errors
