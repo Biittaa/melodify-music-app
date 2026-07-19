@@ -14,5 +14,6 @@ interface IPlayerController {
     fun setSpeed(speed: Float)
     fun toggleShuffle()
     fun setRepeatMode(mode: Int)
+    fun setSleepTimer(minutes: Int)
     fun getPlayerState(): Flow<PlayerState>
 }
