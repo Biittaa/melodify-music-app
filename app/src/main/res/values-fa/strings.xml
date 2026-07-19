@@ -1,0 +1,77 @@
+<resources>
+    <string name="app_name">ملودیفای</string>
+    <string name="app_logo">لوگوی ملودیفای</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">خانه</string>
+    <string name="nav_search">جستجو</string>
+    <string name="nav_downloads">دانلودها</string>
+    <string name="nav_playlists">پلی‌لیست‌ها</string>
+    <string name="nav_profile">پروفایل</string>
+    
+    <!-- Home -->
+    <string name="trending_songs">آهنگ‌های پرطرفدار</string>
+    <string name="latest_songs">جدیدترین آهنگ‌ها</string>
+    <string name="playlists">پلی‌لیست‌ها</string>
+    <string name="liked_songs">آهنگ‌های علاقه‌مندی</string>
+    <string name="recently_played">اخیراً شنیده شده</string>
+    <string name="my_playlists">پلی‌لیست‌های من</string>
+    <string name="top_artists">هنرمندان برتر</string>
+    <string name="songs">آهنگ</string>
+    
+    <!-- Search -->
+    <string name="search_music_artists">جستجوی موسیقی، هنرمندان...</string>
+    <string name="all">همه</string>
+    <string name="artists">هنرمندان</string>
+    <string name="albums">آلبوم‌ها</string>
+    <string name="recent_searches">جستجوهای اخیر</string>
+    <string name="clear_all">پاک کردن همه</string>
+    <string name="clear">پاک کردن</string>
+    <string name="no_search_history">تاریخچه جستجو وجود ندارد</string>
+    <string name="no_results_found">نتیجه‌ای یافت نشد</string>
+    <string name="try_different_keywords">کلمات کلیدی دیگری را امتحان کنید</string>
+    <string name="followers">دنبال‌کننده</string>
+    <string name="following">دنبال‌شونده</string>
+    <string name="play">پخش</string>
+    <string name="delete">حذف</string>
+    <string name="back">بازگشت</string>
+    
+    <!-- Downloads -->
+    <string name="no_downloads">دانلودی وجود ندارد</string>
+    <string name="download_songs_offline">آهنگ‌ها را برای گوش دادن آفلاین دانلود کنید</string>
+    <string name="downloaded">دانلود شده</string>
+    <string name="paused">متوقف</string>
+    <string name="failed">ناموفق</string>
+    <string name="offline_available">در دسترس آفلاین</string>
+    
+    <!-- Playlist -->
+    <string name="no_playlists">پلی‌لیستی وجود ندارد</string>
+    <string name="create_first_playlist">اولین پلی‌لیست خود را بسازید</string>
+    <string name="create_playlist">ساخت پلی‌لیست</string>
+    
+    <!-- Profile -->
+    <string name="profile">پروفایل</string>
+    <string name="premium">پریمیوم</string>
+    <string name="upgrade_to_premium">ارتقا به پریمیوم</string>
+    <string name="premium_active">پریمیوم فعال</string>
+    <string name="settings">تنظیمات</string>
+    <string name="notifications">اعلان‌ها</string>
+    <string name="logout">خروج</string>
+    
+    <!-- Player -->
+    <string name="now_playing">در حال پخش</string>
+    <string name="sleep_timer">تایمر خواب</string>
+    <string name="playback_speed">سرعت پخش</string>
+    <string name="pause">توقف</string>
+    <string name="next">بعدی</string>
+    <string name="previous">قبلی</string>
+    
+    <!-- Settings -->
+    <string name="dark_mode">حالت تاریک</string>
+    <string name="language">زبان</string>
+    <string name="font_size">اندازه فونت</string>
+    
+    <!-- Empty States -->
+    <string name="empty">چیزی اینجا نیست</string>
+    <string name="empty_description">محتوایی در اینجا قرار خواهد گرفت</string>
+</resources>
