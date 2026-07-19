@@ -1,15 +1,54 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Built application files
+*.apk
+*.aab
+*.ap_
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
 local.properties
+
+# Log/OS Files
+*.log
+
+# Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+/.idea/
+/out/
+
+# Eclipse project files
+.classpath
+.project
+.settings/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (don't commit sensitive Firebase config)
+google-services.json
+
+# ProGuard output folder
+/proguard/
+
+# Generated files from annotation processors
+*.dagger*
+*.hilt*
+.apt_generated/
