@@ -10,6 +10,7 @@
 
     <!-- Foreground service for background playback -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <!-- Wake lock to keep CPU awake during playback (prevents audio stutter) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
