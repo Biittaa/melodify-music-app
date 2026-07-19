@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 //package com.melodify.musicapp.feature.playlist
 //
 //import com.melodify.musicapp.domain.model.Playlist
@@ -13,6 +14,8 @@
 //    object OnRefresh : PlaylistEvent()
 //}
 
+=======
+>>>>>>> Stashed changes
 package com.melodify.musicapp.feature.playlist
 
 import com.melodify.musicapp.domain.model.Playlist

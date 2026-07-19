@@ -3,7 +3,10 @@ package com.melodify.musicapp.feature.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.melodify.musicapp.domain.model.Song
+<<<<<<< Updated upstream
 import com.melodify.musicapp.domain.repository.SongRepository
+=======
+>>>>>>> Stashed changes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

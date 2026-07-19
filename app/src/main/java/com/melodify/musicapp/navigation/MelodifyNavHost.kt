@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 //package com.melodify.musicapp.navigation
 //
 //import androidx.compose.animation.*
@@ -100,6 +101,8 @@
 //}
 
 
+=======
+>>>>>>> Stashed changes
 package com.melodify.musicapp.navigation
 
 import androidx.compose.animation.fadeIn

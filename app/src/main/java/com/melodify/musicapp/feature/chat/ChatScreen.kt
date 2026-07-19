@@ -30,9 +30,15 @@ import coil.request.ImageRequest
 import com.melodify.musicapp.R
 import com.melodify.musicapp.domain.model.Message
 import com.melodify.musicapp.domain.model.Song
+<<<<<<< Updated upstream
 import com.melodify.musicapp.ui.components.MelodifyTopBar
 import com.melodify.musicapp.ui.theme.MelodifyColors
 import com.melodify.musicapp.ui.theme.MelodifyGreen
+=======
+import com.melodify.musicapp.core.ui.components.MelodifyTopBar
+import com.melodify.musicapp.core.ui.theme.MelodifyColors
+import com.melodify.musicapp.core.ui.theme.MelodifyGreen
+>>>>>>> Stashed changes
 import java.text.SimpleDateFormat
 import java.util.*
 

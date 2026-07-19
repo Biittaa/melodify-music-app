@@ -5,7 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+<<<<<<< Updated upstream
 import androidx.compose.foundation.lazy.items
+=======
+>>>>>>> Stashed changes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+<<<<<<< Updated upstream
 import com.example.melodify.R
 import com.melodify.musicapp.navigation.Screen
 import com.melodify.musicapp.ui.components.MelodifyTopBar
@@ -36,6 +40,18 @@ import com.melodify.musicapp.ui.theme.Space12
 import com.melodify.musicapp.ui.theme.Space16
 import com.melodify.musicapp.ui.theme.Space4
 import com.melodify.musicapp.ui.theme.Space8
+=======
+import com.melodify.musicapp.navigation.Screen
+import com.melodify.musicapp.core.ui.components.MelodifyTopBar
+import com.melodify.musicapp.core.ui.components.ShimmerLoading
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.Playlist
+import com.melodify.musicapp.core.ui.theme.MelodifyColors
+import com.melodify.musicapp.core.ui.theme.Space12
+import com.melodify.musicapp.core.ui.theme.Space16
+import com.melodify.musicapp.core.ui.theme.Space4
+import com.melodify.musicapp.core.ui.theme.Space8
+>>>>>>> Stashed changes
 
 @Composable
 fun HomeScreen(

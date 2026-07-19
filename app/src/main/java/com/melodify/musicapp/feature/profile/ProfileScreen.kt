@@ -25,11 +25,19 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.melodify.musicapp.navigation.Screen
+<<<<<<< Updated upstream
 import com.melodify.musicapp.ui.components.MelodifyTopBar
 import com.melodify.musicapp.ui.theme.MelodifyColors
 import com.melodify.musicapp.ui.theme.Space12
 import com.melodify.musicapp.ui.theme.Space16
 import com.melodify.musicapp.ui.theme.Space8
+=======
+import com.melodify.musicapp.core.ui.components.MelodifyTopBar
+import com.melodify.musicapp.core.ui.theme.MelodifyColors
+import com.melodify.musicapp.core.ui.theme.Space12
+import com.melodify.musicapp.core.ui.theme.Space16
+import com.melodify.musicapp.core.ui.theme.Space8
+>>>>>>> Stashed changes
 
 @Composable
 fun ProfileScreen(

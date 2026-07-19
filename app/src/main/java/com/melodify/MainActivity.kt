@@ -13,15 +13,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.melodify.musicapp.navigation.MelodifyNavHost
+<<<<<<< Updated upstream
 import com.melodify.musicapp.ui.theme.MelodifyTheme
 import com.melodify.musicapp.ui.components.MelodifyBottomNavigation
+=======
+import com.melodify.musicapp.core.ui.theme.MelodifyTheme
+import com.melodify.musicapp.core.ui.components.MelodifyBottomNavigation
+>>>>>>> Stashed changes
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+<<<<<<< Updated upstream
             MelodifyTheme {  // ✅ استفاده از MelodifyTheme
+=======
+            MelodifyTheme {
+>>>>>>> Stashed changes
                 MelodifyApp()
             }
         }
