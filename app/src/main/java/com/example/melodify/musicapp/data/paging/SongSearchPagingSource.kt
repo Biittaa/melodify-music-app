@@ -18,9 +18,9 @@ import kotlinx.coroutines.tasks.await
 class SongSearchPagingSource(
     private val firestore: FirebaseFirestore,
     private val query: String
-) : PagingSource<DocumentSnapshot?, Song>() {
+) : PagingSource<DocumentSnapshot, Song>() {
 
-    override suspend fun load(params: LoadParams<DocumentSnapshot?>): LoadResult<DocumentSnapshot?, Song> {
+    override suspend fun load(params: LoadParams<DocumentSnapshot>): LoadResult<DocumentSnapshot, Song> {
         return try {
             // Build base query
             val baseQuery = firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
@@ -30,7 +30,7 @@ class SongSearchPagingSource(
 
             // Apply startAfter if we have a last document
             val querySnapshot = if (params.key != null) {
-                baseQuery.startAfter(params.key).get().await()
+                baseQuery.startAfter(params.key!!).get().await()
             } else {
                 baseQuery.get().await()
             }
@@ -48,7 +48,7 @@ class SongSearchPagingSource(
         }
     }
 
-    override fun getRefreshKey(state: PagingState<DocumentSnapshot?, Song>): DocumentSnapshot? {
+    override fun getRefreshKey(state: PagingState<DocumentSnapshot, Song>): DocumentSnapshot? {
         // Return the last document of the last page to refresh from
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.nextKey

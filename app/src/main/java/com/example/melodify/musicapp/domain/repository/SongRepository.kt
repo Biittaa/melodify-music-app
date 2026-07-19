@@ -42,7 +42,7 @@ interface SongRepository {
      * @param query Search keyword(s)
      * @return PagingSource for handling pagination
      */
-    fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot?, Song>
+    fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot, Song>
 
     /**
      * Like a song

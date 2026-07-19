@@ -10,14 +10,18 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+/**
+ * Foreground service for background audio playback.
+ * Uses ExoPlayer and MediaSessionConnector for media control.
+ */
 @AndroidEntryPoint
 class PlaybackService : Service() {
 
     @Inject
     lateinit var exoPlayer: ExoPlayer
 
-    private lateinit var mediaSession: MediaSessionCompat
-    private lateinit var mediaSessionConnector: MediaSessionConnector
+    private var mediaSession: MediaSessionCompat? = null
+    private var mediaSessionConnector: MediaSessionConnector? = null
 
     private val binder = MusicBinder()
 
@@ -28,10 +32,15 @@ class PlaybackService : Service() {
     override fun onCreate() {
         super.onCreate()
         
-        mediaSession = MediaSessionCompat(this, "MelodifyMediaSession")
-        mediaSessionConnector = MediaSessionConnector(mediaSession)
-        mediaSessionConnector.setPlayer(exoPlayer)
-        mediaSession.isActive = true
+        // Initialize MediaSession with legacy support for ExoPlayer 2.x
+        mediaSession = MediaSessionCompat(this, "MelodifyMediaSession").apply {
+            isActive = true
+        }
+        
+        mediaSession?.let { session ->
+            mediaSessionConnector = MediaSessionConnector(session)
+            mediaSessionConnector?.setPlayer(exoPlayer)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
@@ -42,7 +51,7 @@ class PlaybackService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaSession.release()
+        mediaSession?.release()
         exoPlayer.release()
     }
 }

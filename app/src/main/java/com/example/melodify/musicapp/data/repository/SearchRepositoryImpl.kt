@@ -9,6 +9,7 @@ import com.melodify.musicapp.domain.model.SearchHistory
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.SearchRepository
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton

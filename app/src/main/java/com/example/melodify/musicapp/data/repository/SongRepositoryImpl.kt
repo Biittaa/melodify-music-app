@@ -40,7 +40,7 @@ class SongRepositoryImpl @Inject constructor(
         return firestoreDataSource.searchSongs(query)
     }
 
-    override fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot?, Song> {
+    override fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot, Song> {
         return SongSearchPagingSource(
             firestore = firestoreDataSource.firestore,
             query = query

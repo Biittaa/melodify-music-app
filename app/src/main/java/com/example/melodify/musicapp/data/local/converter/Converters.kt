@@ -2,7 +2,7 @@ package com.melodify.musicapp.data.local.converter
 
 import androidx.room.TypeConverter
 
-class Converters {
+class MessageConverters {
     @TypeConverter
     fun fromStringList(value: String?): List<String>? {
         return value?.split(",")?.filter { it.isNotEmpty() }
