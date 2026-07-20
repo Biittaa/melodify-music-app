@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +25,7 @@ import com.melodify.musicapp.domain.model.Conversation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationsScreen(
+    onBackClick: () -> Unit,
     onConversationClick: (String) -> Unit,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
@@ -30,15 +33,28 @@ fun ConversationsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("پیام‌ها", fontWeight = FontWeight.Bold) })
+            TopAppBar(
+                title = { Text("پیام‌ها", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                }
+            )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding)
-        ) {
-            items(uiState.conversations) { conversation ->
-                ConversationItem(conversation) {
-                    onConversationClick(conversation.userId)
+        if (uiState.conversations.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(text = "هنوز پیامی ندارید", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding)
+            ) {
+                items(uiState.conversations) { conversation ->
+                    ConversationItem(conversation) {
+                        onConversationClick(conversation.userId)
+                    }
                 }
             }
         }
@@ -55,14 +71,14 @@ fun ConversationItem(conversation: Conversation, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = "https://www.w3schools.com/howto/img_avatar.png", // In real app, fetch user profile
+            model = "https://www.w3schools.com/howto/img_avatar.png",
             contentDescription = null,
             modifier = Modifier.size(56.dp).clip(CircleShape),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "User ${conversation.userId}", fontWeight = FontWeight.Bold)
+            Text(text = "کاربر ${conversation.userId}", fontWeight = FontWeight.Bold)
             Text(
                 text = conversation.lastMessage,
                 style = MaterialTheme.typography.bodySmall,

@@ -23,6 +23,9 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- For scanning local music on Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
     <!-- Write external storage (for saving downloaded songs - legacy support) -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -45,11 +48,6 @@
         tools:targetApi="31">
 
         <!-- ==================== Splash Activity ==================== -->
-        <!--
-            Splash screen that displays while the app loads.
-            Uses a custom theme with no action bar and a background drawable.
-            Auto-navigates to MainActivity after a short delay.
-        -->
         <activity
             android:name=".feature.splash.SplashActivity"
             android:exported="true"
@@ -61,10 +59,6 @@
         </activity>
 
         <!-- ==================== Main Activity ==================== -->
-        <!--
-            Main entry point of the application after splash screen.
-            Handles configuration changes to prevent activity recreation on keyboard/rotation.
-        -->
         <activity
             android:name=".feature.main.MainActivity"
             android:exported="false"
@@ -72,40 +66,15 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Melodify" />
 
-        <!-- ==================== Player Service (Foreground Service) ==================== -->
-        <!--
-            Foreground service responsible for media playback in the background.
-            Required by ExoPlayer and MediaSession to continue playing when app is in background.
-            type="mediaPlayback" indicates this is a media playback service (Android 14+).
-        -->
+        <!-- ==================== Player Service ==================== -->
         <service
             android:name=".core.player.PlaybackService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback">
-            <!--
-                The service MUST be started as a foreground service with a notification.
-                The notification is controlled via MediaSession.
-            -->
         </service>
 
-        <!-- ==================== Download Service (Optional, WorkManager handles this) ==================== -->
-        <!--
-            Note: Downloads are handled by WorkManager, so no separate service is needed.
-            However, if using a custom download service, it would be defined here.
-        -->
-
-        <!-- ==================== Firebase Configuration ==================== -->
-        <!--
-            Firebase uses the google-services.json file and the following meta-data
-            is automatically merged. No explicit meta-data is required if the plugin is used.
-        -->
-
-        <!-- ==================== File Provider (For sharing files) ==================== -->
-        <!--
-            FileProvider is required for sharing downloaded songs or images
-            with other apps (e.g., sharing a song file via WhatsApp).
-        -->
+        <!-- ==================== File Provider ==================== -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -116,10 +85,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- ==================== Meta Data ==================== -->
-        <!--
-            App version and other meta-data can be placed here if needed.
-        -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             tools:node="remove" />

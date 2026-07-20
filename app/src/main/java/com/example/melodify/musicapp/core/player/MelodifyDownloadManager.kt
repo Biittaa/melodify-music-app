@@ -29,6 +29,7 @@ class MelodifyDownloadManager @Inject constructor(
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresStorageNotLow(true)
                     .build()
             )
             .build()

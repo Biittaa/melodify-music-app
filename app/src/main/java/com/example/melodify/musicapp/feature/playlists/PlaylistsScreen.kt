@@ -11,12 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -34,13 +31,24 @@ fun PlaylistsScreen(
     onPlaylistClick: (Playlist) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showCreateDialog by remember { mutableStateOf(false) }
+
+    if (showCreateDialog) {
+        CreatePlaylistDialog(
+            onDismiss = { showCreateDialog = false },
+            onConfirm = { name ->
+                viewModel.createPlaylist(name)
+                showCreateDialog = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.playlists), fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { /* TODO: Create Playlist Dialog */ }) {
+                    IconButton(onClick = { showCreateDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                     }
                 }
@@ -54,90 +62,66 @@ fun PlaylistsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // User Playlists
             if (uiState.userPlaylists.isNotEmpty()) {
-                item(span = { GridItemSpan(2) }) {
-                    SectionHeader(title = stringResource(R.string.my_playlists))
-                }
+                item(span = { GridItemSpan(2) }) { SectionHeader(title = stringResource(R.string.my_playlists)) }
                 items(uiState.userPlaylists) { playlist ->
                     PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) })
                 }
             }
-
-            // Internal Music
-            item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "موسیقی داخلی")
-            }
-            items(uiState.internalMusic) { playlist ->
-                PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) })
-            }
-
-            // Global Music
-            item(span = { GridItemSpan(2) }) {
-                SectionHeader(title = "موسیقی جهان")
-            }
-            items(uiState.globalMusic) { playlist ->
-                PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) })
-            }
+            item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی داخلی") }
+            items(uiState.internalMusic) { playlist -> PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) }) }
+            item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی جهان") }
+            items(uiState.globalMusic) { playlist -> PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) }) }
         }
     }
 }
 
 @Composable
-fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(vertical = 8.dp)
+fun CreatePlaylistDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("ساخت پلی‌لیست جدید") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("نام پلی‌لیست") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("ایجاد") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("انصراف") }
+        }
     )
 }
 
 @Composable
+fun SectionHeader(title: String) {
+    Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+}
+
+@Composable
 fun PlaylistItem(playlist: Playlist, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth().clickable { onClick() }, shape = RoundedCornerShape(12.dp)) {
         Column {
             Box(modifier = Modifier.aspectRatio(1f)) {
                 if (playlist.coverUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = playlist.coverUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    AsyncImage(model = playlist.coverUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 } else {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    ) {
+                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.secondaryContainer) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.LibraryMusic,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            Icon(imageVector = Icons.Default.LibraryMusic, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
             }
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = playlist.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Text(
-                    text = "${playlist.songsCount} آهنگ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Text(text = playlist.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(text = "${playlist.songsCount} آهنگ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
     }

@@ -16,14 +16,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
+import com.melodify.musicapp.feature.auth.LoginScreen
+import com.melodify.musicapp.feature.auth.RegisterScreen
 import com.melodify.musicapp.feature.home.HomeScreen
 import com.melodify.musicapp.feature.search.SearchScreen
 import com.melodify.musicapp.feature.downloads.DownloadsScreen
@@ -36,6 +36,8 @@ import com.melodify.musicapp.feature.settings.SettingsScreen
 import com.melodify.musicapp.feature.chat.ConversationsScreen
 import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
+import com.melodify.musicapp.feature.profile.ProfileViewModel
+import com.melodify.musicapp.feature.social.SocialScreen
 
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
     object Home : Screen("home", R.string.home, Icons.Default.Home)
@@ -44,37 +46,44 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object Playlists : Screen("playlists", R.string.playlists, Icons.Default.LibraryMusic)
     object Profile : Screen("profile", R.string.profile, Icons.Default.Person)
     object Settings : Screen("settings", R.string.settings, Icons.Default.Settings)
-    object ChatList : Screen("chat_list", R.string.app_name, Icons.Default.Notifications)
-    object ChatDetail : Screen("chat_detail/{userId}")
+    object ChatList : Screen("chat_list", R.string.app_name, Icons.AutoMirrored.Filled.Chat)
+    object Login : Screen("login")
+    object Register : Screen("register")
     object PlaylistDetail : Screen("playlist_detail/{playlistId}")
     object LikedSongs : Screen("liked_songs", R.string.liked_songs)
+    object Social : Screen("social", R.string.top_artists, Icons.Default.People)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val bottomNavItems = listOf(Screen.Home, Screen.Search, Screen.Downloads, Screen.Playlists, Screen.Profile)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     
+    val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
+
+    // Unified Auth Check
+    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
+        if (!profileUiState.isLoading && profileUiState.user == null) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 val currentRoute = currentDestination?.route ?: ""
-                val shouldShowTopBar = bottomNavItems.any { it.route == currentRoute } || currentRoute == Screen.ChatList.route
+                val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
+                val isMainTab = bottomNavItems.any { it.route == currentRoute }
                 
-                if (shouldShowTopBar) {
+                if (isMainTab) {
                     CenterAlignedTopAppBar(
-                        title = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Melodify", fontWeight = FontWeight.ExtraBold)
-                            }
-                        },
+                        title = { Text("Melodify", fontWeight = FontWeight.ExtraBold) },
                         navigationIcon = {
                             IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
                                 Icon(Icons.Default.Settings, contentDescription = null)
@@ -82,40 +91,35 @@ fun MainScreen() {
                         },
                         actions = {
                             IconButton(onClick = { navController.navigate(Screen.ChatList.route) }) {
-                                BadgedBox(badge = { Badge { Text("3") } }) {
-                                    Icon(Icons.Default.Notifications, contentDescription = null)
-                                }
+                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null)
                             }
-                            AsyncImage(
-                                model = "https://www.w3schools.com/howto/img_avatar.png",
-                                contentDescription = "Profile",
-                                modifier = Modifier
-                                    .padding(end = 12.dp)
-                                    .size(32.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
                         }
                     )
                 }
             },
             bottomBar = {
-                Column {
-                    MiniPlayer(onClick = { showNowPlaying = true })
-                    NavigationBar {
-                        bottomNavItems.forEach { screen ->
-                            NavigationBarItem(
-                                icon = { Icon(screen.icon!!, contentDescription = null) },
-                                label = { Text(stringResource(screen.labelRes!!)) },
-                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                onClick = {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
+                val currentRoute = currentDestination?.route ?: ""
+                val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
+                if (!isAuthScreen) {
+                    Column {
+                        MiniPlayer(onClick = { showNowPlaying = true })
+                        NavigationBar {
+                            bottomNavItems.forEach { screen ->
+                                NavigationBarItem(
+                                    icon = { Icon(screen.icon!!, contentDescription = null) },
+                                    label = { Text(stringResource(screen.labelRes!!)) },
+                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                    onClick = {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -126,13 +130,26 @@ fun MainScreen() {
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
+                composable(Screen.Login.route) {
+                    LoginScreen(
+                        onLoginSuccess = { navController.navigate(Screen.Home.route) { popUpTo(0) } },
+                        onNavigateToRegister = { navController.navigate(Screen.Register.route) }
+                    )
+                }
+                composable(Screen.Register.route) {
+                    RegisterScreen(
+                        onRegisterSuccess = { navController.navigate(Screen.Home.route) { popUpTo(0) } },
+                        onNavigateToLogin = { navController.navigate(Screen.Login.route) }
+                    )
+                }
                 composable(Screen.Home.route) { 
                     HomeScreen(
                         onSongClick = { showNowPlaying = true },
                         onQuickActionClick = { action ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
-                                // other actions...
+                                "playlists" -> navController.navigate(Screen.Playlists.route)
+                                "artists" -> navController.navigate(Screen.Social.route)
                             }
                         }
                     ) 
@@ -147,21 +164,24 @@ fun MainScreen() {
                 composable(Screen.Profile.route) { 
                     ProfileScreen(
                         onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                        onLogoutClick = { /* Handle Logout */ }
+                        onLogoutClick = { 
+                            profileViewModel.logout()
+                        }
                     ) 
                 }
                 composable(Screen.Settings.route) { SettingsScreen(onBackClick = { navController.popBackStack() }) }
                 composable(Screen.ChatList.route) { 
-                    ConversationsScreen(onConversationClick = { userId -> 
-                        navController.navigate("chat_detail/$userId")
-                    }) 
+                    ConversationsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onConversationClick = { userId -> navController.navigate("chat_detail/$userId") }
+                    ) 
                 }
                 composable("chat_detail/{userId}") { backStackEntry ->
                     val userId = backStackEntry.arguments?.getString("userId") ?: ""
                     ChatScreen(
                         otherUserId = userId,
                         onBackClick = { navController.popBackStack() },
-                        onSongClick = { /* Play shared song */ }
+                        onSongClick = { showNowPlaying = true }
                     )
                 }
                 composable(Screen.PlaylistDetail.route) { backStackEntry ->
@@ -177,6 +197,9 @@ fun MainScreen() {
                         onBackClick = { navController.popBackStack() },
                         onSongClick = { showNowPlaying = true }
                     )
+                }
+                composable(Screen.Social.route) {
+                    SocialScreen(onBackClick = { navController.popBackStack() })
                 }
             }
         }

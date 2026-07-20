@@ -55,6 +55,14 @@ fun HomeScreen(
             item { QuickActionsSection(onQuickActionClick) }
             item { SongSection(title = stringResource(R.string.new_releases), songs = uiState.newestSongs, onSongClick = onSongClick) }
             item { SongSection(title = stringResource(R.string.trending), songs = uiState.trendingSongs, onSongClick = onSongClick) }
+            
+            // Local Music Section
+            val localSongs = uiState.trendingSongs.filter { it.id.startsWith("local_") }
+            if (localSongs.isNotEmpty()) {
+                item {
+                    SongSection(title = "My Local Music", songs = localSongs, onSongClick = onSongClick)
+                }
+            }
         }
     }
 }

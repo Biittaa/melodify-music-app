@@ -1,5 +1,8 @@
 package com.melodify.musicapp.feature.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +36,26 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val user = uiState.user
+    
+    var showEditDialog by remember { mutableStateOf(false) }
+    
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.updateProfileImage(it) }
+    }
+
+    if (showEditDialog && user != null) {
+        EditProfileDialog(
+            currentName = user.fullName,
+            currentBio = user.bio,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { name, bio ->
+                viewModel.updateProfile(name, bio)
+                showEditDialog = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -57,23 +79,24 @@ fun ProfileScreen(
             // Avatar
             Box(contentAlignment = Alignment.BottomEnd) {
                 AsyncImage(
-                    model = user?.profileImage ?: "https://www.w3schools.com/howto/img_avatar.png",
+                    model = user?.profileImage?.takeIf { it.isNotEmpty() } ?: "https://www.w3schools.com/howto/img_avatar.png",
                     contentDescription = null,
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(Color.LightGray),
+                        .background(Color.LightGray)
+                        .clickable { photoPickerLauncher.launch("image/*") },
                     contentScale = ContentScale.Crop
                 )
                 Surface(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .clickable { /* Change Avatar */ },
+                        .clickable { photoPickerLauncher.launch("image/*") },
                     color = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
+                        imageVector = Icons.Default.CameraAlt,
                         contentDescription = null,
                         modifier = Modifier.padding(8.dp),
                         tint = Color.White
@@ -83,23 +106,28 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Name & Premium Badge
+            // Name & Edit
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = user?.fullName ?: "Guest User",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (uiState.isPremium) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Default.Verified,
-                        contentDescription = "Premium",
-                        tint = PremiumGold
-                    )
+                IconButton(onClick = { showEditDialog = true }) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
                 }
             }
             Text(text = "@${user?.username ?: "guest"}", color = Color.Gray)
+            
+            user?.bio?.let { bio ->
+                if (bio.isNotEmpty()) {
+                    Text(
+                        text = bio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -116,7 +144,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Premium Section
-            if (!uiState.isPremium) {
+            if (uiState.isPremium == false) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = PremiumGold.copy(alpha = 0.1f)),
@@ -149,25 +177,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-            } else {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = PremiumGold.copy(alpha = 0.2f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFB8860B))
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = "You are a Premium Member",
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFB8860B)
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -175,7 +184,7 @@ fun ProfileScreen(
             // Logout
             TextButton(
                 onClick = onLogoutClick,
-                colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
                 Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -183,6 +192,49 @@ fun ProfileScreen(
             }
         }
     }
+}
+
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    currentBio: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+    var bio by remember { mutableStateOf(currentBio) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Profile") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = bio,
+                    onValueChange = { bio = it },
+                    label = { Text("Bio") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name, bio) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

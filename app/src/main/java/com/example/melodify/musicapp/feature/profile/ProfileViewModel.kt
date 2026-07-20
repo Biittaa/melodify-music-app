@@ -1,5 +1,6 @@
 package com.melodify.musicapp.feature.profile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.melodify.musicapp.domain.model.User
@@ -37,36 +38,36 @@ class ProfileViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val isPremium = settingsRepository.getPremium()
-                val user = try {
-                    userRepository.getProfile("current_user_id")
-                } catch (e: Exception) {
-                    User(
-                        id = "current_user_id",
-                        username = "User",
-                        fullName = "Full Name",
-                        email = "user@melodify.com",
-                        profileImage = "",
-                        bio = "Music Lover",
-                        followersCount = 0,
-                        followingCount = 0,
-                        playlistsCount = 0,
-                        isPremium = isPremium,
-                        isFollowing = false
-                    )
+                val currentUser = authRepository.getCurrentUser()
+                if (currentUser != null) {
+                    val user = userRepository.getProfile(currentUser.id)
+                    _uiState.update { it.copy(user = user, isPremium = isPremium, isLoading = false) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
                 }
-                _uiState.update { it.copy(user = user, isPremium = isPremium, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
 
-    fun upgradeToPremium() {
+    fun updateProfile(fullName: String, bio: String) {
         viewModelScope.launch {
-            settingsRepository.setPremium(true)
-            _uiState.update { it.copy(isPremium = true) }
-            _uiState.value.user?.let {
-                userRepository.updateProfile(it.copy(isPremium = true))
+            _uiState.value.user?.let { current ->
+                val updatedUser = current.copy(fullName = fullName, bio = bio)
+                userRepository.updateProfile(updatedUser)
+                _uiState.update { it.copy(user = updatedUser) }
+            }
+        }
+    }
+
+    fun updateProfileImage(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value.user?.let { current ->
+                // در اپلیکیشن واقعی ابتدا در Storage آپلود می‌شود
+                val updatedUser = current.copy(profileImage = uri.toString())
+                userRepository.updateProfile(updatedUser)
+                _uiState.update { it.copy(user = updatedUser) }
             }
         }
     }
@@ -74,7 +75,14 @@ class ProfileViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
-            // DataStore and Room clearing logic is handled in AuthRepositoryImpl
+            _uiState.update { it.copy(user = null) }
+        }
+    }
+    
+    fun upgradeToPremium() {
+        viewModelScope.launch {
+            settingsRepository.setPremium(true)
+            _uiState.update { it.copy(isPremium = true) }
         }
     }
 }
