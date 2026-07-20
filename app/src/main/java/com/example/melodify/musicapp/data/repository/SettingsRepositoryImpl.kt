@@ -3,6 +3,7 @@ package com.melodify.musicapp.data.repository
 import com.melodify.musicapp.data.local.datastore.SettingsDataStore
 import com.melodify.musicapp.domain.model.Settings
 import com.melodify.musicapp.domain.repository.SettingsRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,6 +19,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun getSettings(): Settings {
         return settingsDataStore.settingsFlow.first()
+    }
+
+    override fun getSettingsFlow(): Flow<Settings> {
+        return settingsDataStore.settingsFlow
     }
 
     override suspend fun setDarkMode(enabled: Boolean) {

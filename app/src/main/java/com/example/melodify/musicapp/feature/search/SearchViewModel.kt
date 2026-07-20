@@ -1,0 +1,86 @@
+package com.melodify.musicapp.feature.search
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.melodify.musicapp.domain.model.SearchHistory
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.repository.SearchRepository
+import com.melodify.musicapp.domain.repository.SongRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+enum class SearchFilter {
+    All, Songs, Artists, Albums, Users
+}
+
+data class SearchUiState(
+    val query: String = "",
+    val history: List<SearchHistory> = emptyList(),
+    val selectedFilter: SearchFilter = SearchFilter.All
+)
+
+@HiltViewModel
+class SearchViewModel @Inject constructor(
+    private val searchRepository: SearchRepository,
+    private val songRepository: SongRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(SearchUiState())
+    val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val searchResults: Flow<PagingData<Song>> = _searchQuery
+        .debounce(500L)
+        .distinctUntilChanged()
+        .flatMapLatest { query ->
+            if (query.isBlank()) {
+                flowOf(PagingData.empty())
+            } else {
+                Pager(
+                    config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+                    pagingSourceFactory = { songRepository.searchSongsPaging(query) }
+                ).flow.cachedIn(viewModelScope)
+            }
+        }
+
+    init {
+        loadHistory()
+    }
+
+    fun onQueryChange(query: String) {
+        _searchQuery.value = query
+        _uiState.update { it.copy(query = query) }
+        if (query.isNotBlank()) {
+            viewModelScope.launch { searchRepository.saveHistory(query) }
+        }
+    }
+
+    fun onFilterChange(filter: SearchFilter) {
+        _uiState.update { it.copy(selectedFilter = filter) }
+        // Note: In a complete implementation, PagingSource would also filter by type
+    }
+
+    private fun loadHistory() {
+        viewModelScope.launch {
+            val history = searchRepository.getHistory()
+            _uiState.update { it.copy(history = history) }
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch {
+            searchRepository.clearHistory()
+            loadHistory()
+        }
+    }
+}

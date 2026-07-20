@@ -1,8 +1,8 @@
 package com.melodify.musicapp.domain.model
 
 data class Settings(
-    val darkMode: Boolean,
-    val language: String,
-    val fontScale: Float,
-    val notificationEnabled: Boolean
+    val darkMode: Boolean = false,
+    val language: String = "en",
+    val fontScale: Float = 1.0f,
+    val notificationEnabled: Boolean = true
 )

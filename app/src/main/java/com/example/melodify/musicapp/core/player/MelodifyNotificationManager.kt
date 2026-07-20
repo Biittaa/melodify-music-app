@@ -9,24 +9,31 @@ import coil.request.ImageRequest
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.melodify.musicapp.R
+import com.melodify.musicapp.core.common.Constants
+import kotlinx.coroutines.*
 
 class MelodifyNotificationManager(
     private val context: Context,
     private val player: Player,
-    private val notificationListener: PlayerNotificationManager.NotificationListener
+    private val onNotificationPosted: (Int, android.app.Notification, Boolean) -> Unit
 ) {
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     private val notificationManager: PlayerNotificationManager
 
     init {
         notificationManager = PlayerNotificationManager.Builder(
             context,
-            NOTIFICATION_ID,
-            CHANNEL_ID
+            Constants.PLAYER_NOTIFICATION_ID,
+            Constants.PLAYER_CHANNEL_ID
         )
-            .setNotificationListener(notificationListener)
+            .setChannelNameResourceId(R.string.app_name)
             .setMediaDescriptionAdapter(DescriptionAdapter())
+            .setNotificationListener(NotificationListener())
             .build().apply {
                 setPlayer(player)
+                setUseNextAction(true)
+                setUsePreviousAction(true)
             }
     }
 
@@ -43,13 +50,28 @@ class MelodifyNotificationManager(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-            // بارگذاری آیکون از URL (اختیاری - در اینجا از لوگوی برنامه استفاده میکنیم)
-            return null 
+            val uri = player.currentMediaItem?.mediaMetadata?.artworkUri
+            if (uri != null) {
+                serviceScope.launch {
+                    val loader = ImageLoader(context)
+                    val request = ImageRequest.Builder(context).data(uri).build()
+                    val result = loader.execute(request)
+                    if (result.drawable is BitmapDrawable) {
+                        callback.onBitmap((result.drawable as BitmapDrawable).bitmap)
+                    }
+                }
+            }
+            return null
         }
     }
 
-    companion object {
-        const val CHANNEL_ID = "melodify_music_channel"
-        const val NOTIFICATION_ID = 1
+    private inner class NotificationListener : PlayerNotificationManager.NotificationListener {
+        override fun onNotificationPosted(
+            notificationId: Int,
+            notification: android.app.Notification,
+            ongoing: Boolean
+        ) {
+            onNotificationPosted(notificationId, notification, ongoing)
+        }
     }
 }

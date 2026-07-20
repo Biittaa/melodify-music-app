@@ -1,6 +1,7 @@
 package com.melodify.musicapp.domain.repository
 
 import com.melodify.musicapp.domain.model.Settings
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for app settings management
@@ -14,6 +15,11 @@ interface SettingsRepository {
      * @return Settings object
      */
     suspend fun getSettings(): Settings
+
+    /**
+     * Get app settings as a reactive flow
+     */
+    fun getSettingsFlow(): Flow<Settings>
 
     /**
      * Enable or disable dark mode
@@ -39,7 +45,6 @@ interface SettingsRepository {
      */
     suspend fun setNotification(enabled: Boolean)
 
-    // Add these methods to SettingsRepository interface
     suspend fun getPremium(): Boolean
     suspend fun setPremium(isPremium: Boolean)
 }

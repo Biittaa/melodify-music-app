@@ -10,15 +10,11 @@ import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.SearchRepository
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of SearchRepository
- * Handles search across songs, artists, albums, users
- * Also manages search history persistence with Room
- */
 @Singleton
 class SearchRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -30,18 +26,24 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchArtists(query: String): List<Artist> {
-        // TODO: Implement artist search in Firestore
         return emptyList()
     }
 
     override suspend fun searchAlbums(query: String): List<Album> {
-        // TODO: Implement album search in Firestore
         return emptyList()
     }
 
     override suspend fun searchUsers(query: String): List<User> {
-        // TODO: Implement user search in Firestore
-        return emptyList()
+        return try {
+            firestoreDataSource.firestore.collection("users")
+                .whereGreaterThanOrEqualTo("username", query)
+                .whereLessThanOrEqualTo("username", query + "\uf8ff")
+                .get()
+                .await()
+                .toObjects(User::class.java)
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     override suspend fun saveHistory(query: String) {
@@ -60,11 +62,7 @@ class SearchRepositoryImpl @Inject constructor(
     override suspend fun getHistory(): List<SearchHistory> {
         val entities = searchHistoryDao.getAll().firstOrNull() ?: emptyList()
         return entities.map { entity ->
-            SearchHistory(
-                id = entity.id,
-                keyword = entity.keyword,
-                searchedAt = entity.searchedAt
-            )
+            SearchHistory(id = entity.id, keyword = entity.keyword, searchedAt = entity.searchedAt)
         }
     }
 }

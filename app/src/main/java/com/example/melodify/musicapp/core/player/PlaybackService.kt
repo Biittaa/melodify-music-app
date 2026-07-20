@@ -10,10 +10,6 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/**
- * Foreground service for background audio playback.
- * Uses ExoPlayer and MediaSessionConnector for media control.
- */
 @AndroidEntryPoint
 class PlaybackService : Service() {
 
@@ -22,6 +18,7 @@ class PlaybackService : Service() {
 
     private var mediaSession: MediaSessionCompat? = null
     private var mediaSessionConnector: MediaSessionConnector? = null
+    private var notificationManager: MelodifyNotificationManager? = null
 
     private val binder = MusicBinder()
 
@@ -32,7 +29,6 @@ class PlaybackService : Service() {
     override fun onCreate() {
         super.onCreate()
         
-        // Initialize MediaSession with legacy support for ExoPlayer 2.x
         mediaSession = MediaSessionCompat(this, "MelodifyMediaSession").apply {
             isActive = true
         }
@@ -40,6 +36,17 @@ class PlaybackService : Service() {
         mediaSession?.let { session ->
             mediaSessionConnector = MediaSessionConnector(session)
             mediaSessionConnector?.setPlayer(exoPlayer)
+        }
+
+        notificationManager = MelodifyNotificationManager(
+            this,
+            exoPlayer
+        ) { notificationId, notification, ongoing ->
+            if (ongoing) {
+                startForeground(notificationId, notification)
+            } else {
+                stopForeground(STOP_FOREGROUND_DETACH)
+            }
         }
     }
 
@@ -53,5 +60,6 @@ class PlaybackService : Service() {
         super.onDestroy()
         mediaSession?.release()
         exoPlayer.release()
+        notificationManager = null
     }
 }

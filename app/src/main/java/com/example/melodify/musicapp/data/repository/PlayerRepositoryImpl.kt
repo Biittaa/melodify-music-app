@@ -11,7 +11,7 @@ import javax.inject.Singleton
 /**
  * Implementation of PlayerRepository
  * Delegates all playback operations to IPlayerController
- * This is a bridge between data layer and Player module (Person #2)
+ * This is a bridge between data layer and Player module
  */
 @Singleton
 class PlayerRepositoryImpl @Inject constructor(
@@ -52,6 +52,10 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override fun setRepeatMode(mode: Int) {
         playerController.setRepeatMode(mode)
+    }
+
+    override fun setSleepTimer(minutes: Int) {
+        playerController.setSleepTimer(minutes)
     }
 
     override fun playerState(): Flow<PlayerState> {

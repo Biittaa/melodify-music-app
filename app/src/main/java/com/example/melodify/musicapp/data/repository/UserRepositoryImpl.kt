@@ -1,16 +1,12 @@
 package com.melodify.musicapp.data.repository
 
-import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.UserRepository
+import com.melodify.musicapp.core.common.CurrentUserProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of UserRepository
- * Handles user profile operations and follow/unfollow
- */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -23,10 +19,6 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateProfile(user: User) {
         firestoreDataSource.updateUser(user)
-        // Update cache if this is the current user
-        if (currentUserProvider.getCurrentUser()?.id == user.id) {
-            currentUserProvider.setUser(user)
-        }
     }
 
     override suspend fun follow(userId: String) {
