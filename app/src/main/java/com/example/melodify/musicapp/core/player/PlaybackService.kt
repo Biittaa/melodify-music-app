@@ -45,7 +45,8 @@ class PlaybackService : Service() {
             if (ongoing) {
                 startForeground(notificationId, notification)
             } else {
-                stopForeground(STOP_FOREGROUND_DETACH)
+                // STOP_FOREGROUND_DETACH is sometimes problematic. Use STOP_FOREGROUND_REMOVE or false.
+                stopForeground(false)
             }
         }
     }

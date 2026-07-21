@@ -15,7 +15,7 @@ import kotlinx.coroutines.*
 class MelodifyNotificationManager(
     private val context: Context,
     private val player: Player,
-    private val onNotificationPosted: (Int, android.app.Notification, Boolean) -> Unit
+    private val notificationListener: (Int, android.app.Notification, Boolean) -> Unit
 ) {
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -71,7 +71,15 @@ class MelodifyNotificationManager(
             notification: android.app.Notification,
             ongoing: Boolean
         ) {
-            onNotificationPosted(notificationId, notification, ongoing)
+            // CALL THE RENAMED LAMBDA HERE:
+            notificationListener(notificationId, notification, ongoing)
+        }
+
+        // Optional but recommended: handle notification cancellation
+        override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+            super.onNotificationCancelled(notificationId, dismissedByUser)
+            // You can leave this empty or handle stopping the service if needed
         }
     }
 }
+

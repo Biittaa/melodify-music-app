@@ -18,7 +18,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
-
+import android.content.Intent
 @Singleton
 class PlayerControllerImpl @Inject constructor(
     private val exoPlayer: ExoPlayer,
@@ -36,6 +36,10 @@ class PlayerControllerImpl @Inject constructor(
     }
 
     override fun play(song: Song) {
+        // Start the service so playback doesn't die in the background
+        val intent = Intent(context, PlaybackService::class.java)
+        context.startService(intent)
+
         if (currentSong?.id != song.id) {
             currentSong = song
             val localUri = downloadManager.getLocalFileUri(song.id)
@@ -142,24 +146,7 @@ class PlayerControllerImpl @Inject constructor(
     }
 
     private fun handleCrossfade() {
-        val duration = exoPlayer.duration
-        val position = exoPlayer.currentPosition
-        if (duration > 0) {
-            val remaining = duration - position
-            // Fade-out: last 5 seconds of the song
-            if (remaining in 1..5000) {
-                val volume = remaining.toFloat() / 5000f
-                exoPlayer.volume = volume.coerceIn(0f, 1f)
-            }
-            // Fade-in: first 3 seconds of the song
-            else if (position in 0..3000) {
-                val volume = position.toFloat() / 3000f
-                exoPlayer.volume = volume.coerceIn(0f, 1f)
-            } else {
-                exoPlayer.volume = 1.0f
-            }
-        } else {
-            exoPlayer.volume = 1.0f
-        }
+        // Disabled experimental crossfade to fix audio muting issues
+        exoPlayer.volume = 1.0f
     }
 }

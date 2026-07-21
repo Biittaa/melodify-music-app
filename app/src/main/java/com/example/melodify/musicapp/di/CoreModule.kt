@@ -22,6 +22,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
 import javax.inject.Singleton
+import com.google.android.exoplayer2.upstream.DefaultDataSource
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -77,7 +78,7 @@ abstract class CoreModule {
         ): CacheDataSource.Factory {
             return CacheDataSource.Factory()
                 .setCache(cache)
-                .setUpstreamDataSourceFactory(DefaultHttpDataSource.Factory())
+                .setUpstreamDataSourceFactory(DefaultDataSource.Factory(context))
                 .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
         }
 

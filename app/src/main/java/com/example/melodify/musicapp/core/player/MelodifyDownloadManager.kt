@@ -7,6 +7,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.net.Uri
 
 @Singleton
 class MelodifyDownloadManager @Inject constructor(
@@ -50,7 +51,8 @@ class MelodifyDownloadManager @Inject constructor(
 
     fun getLocalFileUri(songId: String): String? {
         val file = File(context.filesDir, "songs/$songId.mp3")
-        return if (file.exists()) file.absolutePath else null
+        // Convert the File to a proper Uri string
+        return if (file.exists()) Uri.fromFile(file).toString() else null
     }
 
     fun deleteDownload(songId: String): Boolean {
