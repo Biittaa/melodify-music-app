@@ -1,4 +1,4 @@
-package com.melodify.musicapp.feature.profile
+package com.example.melodify.musicapp.feature.profile
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -40,7 +40,11 @@ class ProfileViewModel @Inject constructor(
                 val isPremium = settingsRepository.getPremium()
                 val currentUser = authRepository.getCurrentUser()
                 if (currentUser != null) {
-                    val user = userRepository.getProfile(currentUser.id)
+                    val user = try {
+                        userRepository.getProfile(currentUser.id)
+                    } catch (e: Exception) {
+                        currentUser
+                    }
                     _uiState.update { it.copy(user = user, isPremium = isPremium, isLoading = false) }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
@@ -64,7 +68,6 @@ class ProfileViewModel @Inject constructor(
     fun updateProfileImage(uri: Uri) {
         viewModelScope.launch {
             _uiState.value.user?.let { current ->
-                // در اپلیکیشن واقعی ابتدا در Storage آپلود می‌شود
                 val updatedUser = current.copy(profileImage = uri.toString())
                 userRepository.updateProfile(updatedUser)
                 _uiState.update { it.copy(user = updatedUser) }
@@ -78,7 +81,7 @@ class ProfileViewModel @Inject constructor(
             _uiState.update { it.copy(user = null) }
         }
     }
-    
+
     fun upgradeToPremium() {
         viewModelScope.launch {
             settingsRepository.setPremium(true)

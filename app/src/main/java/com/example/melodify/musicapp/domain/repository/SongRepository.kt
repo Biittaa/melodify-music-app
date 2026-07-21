@@ -1,7 +1,6 @@
 package com.melodify.musicapp.domain.repository // Unified Package
 
 import androidx.paging.PagingSource
-import com.google.firebase.firestore.DocumentSnapshot
 import com.melodify.musicapp.domain.model.Song
 
 interface SongRepository {
@@ -9,7 +8,7 @@ interface SongRepository {
     suspend fun getLatestSongs(): List<Song>
     suspend fun getSong(songId: String): Song
     suspend fun searchSongs(query: String): List<Song>
-    fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot, Song>
+    fun searchSongsPaging(query: String): PagingSource<Int, Song>
     suspend fun likeSong(songId: String)
     suspend fun unlikeSong(songId: String)
     suspend fun getLikedSongs(): List<Song>

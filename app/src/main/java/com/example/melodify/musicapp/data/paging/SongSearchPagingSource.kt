@@ -1,57 +1,47 @@
-package com.melodify.musicapp.data.paging
+package com.example.melodify.musicapp.data.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.melodify.musicapp.core.common.Constants
 import com.melodify.musicapp.domain.model.Song
-import kotlinx.coroutines.tasks.await
+import com.melodify.musicapp.domain.repository.SongRepository
 
 /**
- * PagingSource for searching songs from Firestore
- * Uses cursor-based pagination with startAfter(lastDocument)
- * @param firestore FirebaseFirestore instance
- * @param query The search query string
+ * PagingSource for searching songs.
+ * Integrates local, remote, and mock results, with fallback pagination to prevent offline failures.
  */
 class SongSearchPagingSource(
-    private val firestore: FirebaseFirestore,
+    private val songRepository: SongRepository,
     private val query: String
-) : PagingSource<DocumentSnapshot, Song>() {
+) : PagingSource<Int, Song>() {
 
-    override suspend fun load(params: LoadParams<DocumentSnapshot>): LoadResult<DocumentSnapshot, Song> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Song> {
         return try {
-            // Build base query
-            val baseQuery = firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
-                .whereArrayContains("searchKeywords", query.lowercase())
-                .orderBy("title")
-                .limit(params.loadSize.toLong())
+            val page = params.key ?: 0
+            val allSongs = songRepository.searchSongs(query)
 
-            // Apply startAfter if we have a last document
-            val querySnapshot = if (params.key != null) {
-                baseQuery.startAfter(params.key!!).get().await()
+            val fromIndex = page * params.loadSize
+            val toIndex = minOf(fromIndex + params.loadSize, allSongs.size)
+
+            val items = if (fromIndex < allSongs.size) {
+                allSongs.subList(fromIndex, toIndex)
             } else {
-                baseQuery.get().await()
+                emptyList()
             }
 
-            val songs = querySnapshot.documents.mapNotNull { it.toObject(Song::class.java) }
-            val lastDocument = querySnapshot.documents.lastOrNull()
-
             LoadResult.Page(
-                data = songs,
-                prevKey = null, // Firestore doesn't support previous pages easily
-                nextKey = if (songs.isNotEmpty()) lastDocument else null
+                data = items,
+                prevKey = if (page > 0) page - 1 else null,
+                nextKey = if (toIndex < allSongs.size) page + 1 else null
             )
         } catch (e: Exception) {
             LoadResult.Error(e)
         }
     }
 
-    override fun getRefreshKey(state: PagingState<DocumentSnapshot, Song>): DocumentSnapshot? {
-        // Return the last document of the last page to refresh from
+    override fun getRefreshKey(state: PagingState<Int, Song>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.nextKey
+            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
+                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
         }
     }
 }

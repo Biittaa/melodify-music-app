@@ -1,5 +1,5 @@
 @file:JvmName("MainScreenKt")
-package com.melodify.musicapp.feature.main // Unified Package
+package com.example.melodify.musicapp.feature.main
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
@@ -25,7 +25,7 @@ import androidx.navigation.compose.*
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 
-// Domain models
+// Domain models (Note standard com.melodify imports)
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.Playlist
 
@@ -44,7 +44,8 @@ import com.melodify.musicapp.feature.settings.SettingsScreen
 import com.melodify.musicapp.feature.chat.ConversationsScreen
 import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
-import com.melodify.musicapp.feature.profile.ProfileViewModel
+import com.example.melodify.musicapp.feature.profile.ProfileViewModel
+import com.melodify.musicapp.feature.player.PlayerViewModel
 import com.melodify.musicapp.feature.social.SocialScreen
 
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
@@ -64,7 +65,10 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
+fun MainScreen(
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    playerViewModel: PlayerViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val bottomNavItems = listOf(Screen.Home, Screen.Search, Screen.Downloads, Screen.Playlists, Screen.Profile)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -130,7 +134,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
             bottomBar = {
                 val currentRoute = currentDestination?.route ?: ""
                 val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
-                if (!isAuthScreen && profileUiState.user != null) {
+                if (!isAuthScreen) {
                     Column {
                         MiniPlayer(onClick = { showNowPlaying = true })
                         NavigationBar {
@@ -174,7 +178,10 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 }
                 composable(Screen.Home.route) {
                     HomeScreen(
-                        onSongClick = { _: Song -> showNowPlaying = true },
+                        onSongClick = { song: Song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        },
                         onQuickActionClick = { action: String ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
@@ -184,8 +191,18 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                         }
                     )
                 }
-                composable(Screen.Search.route) { SearchScreen(onSongClick = { _: Song -> showNowPlaying = true }) }
-                composable(Screen.Downloads.route) { DownloadsScreen(onSongClick = { _: Song -> showNowPlaying = true }) }
+                composable(Screen.Search.route) {
+                    SearchScreen(onSongClick = { song: Song ->
+                        playerViewModel.playSong(song)
+                        showNowPlaying = true
+                    })
+                }
+                composable(Screen.Downloads.route) {
+                    DownloadsScreen(onSongClick = { song: Song ->
+                        playerViewModel.playSong(song)
+                        showNowPlaying = true
+                    })
+                }
                 composable(Screen.Playlists.route) {
                     PlaylistsScreen(onPlaylistClick = { playlist ->
                         navController.navigate("playlist_detail/${playlist.id}")
@@ -217,11 +234,20 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                     PlaylistDetailScreen(
                         playlistId = playlistId,
                         onBackClick = { navController.popBackStack() },
-                        onSongClick = { _: Song -> showNowPlaying = true }
+                        onSongClick = { song: Song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        }
                     )
                 }
                 composable(Screen.LikedSongs.route) {
-                    LikedSongsScreen(onBackClick = { navController.popBackStack() }, onSongClick = { _: Song -> showNowPlaying = true })
+                    LikedSongsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSongClick = { song: Song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        }
+                    )
                 }
                 composable(Screen.Social.route) {
                     SocialScreen(onBackClick = { navController.popBackStack() })
