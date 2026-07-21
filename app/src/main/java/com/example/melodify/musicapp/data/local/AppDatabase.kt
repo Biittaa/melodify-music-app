@@ -17,9 +17,10 @@ import com.melodify.musicapp.data.local.entity.*
         DownloadedSongEntity::class,
         MessageEntity::class,
         ConversationEntity::class,
-        PlaylistSongEntity::class
+        PlaylistSongEntity::class,
+        PlaylistEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(MessageConverters::class)
@@ -31,6 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun conversationDao(): ConversationDao
     abstract fun playlistSongDao(): PlaylistSongDao
+
+    abstract fun playlistDao(): PlaylistDao
 
     companion object {
         @Volatile

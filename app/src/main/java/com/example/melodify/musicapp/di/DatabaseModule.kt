@@ -10,6 +10,7 @@ import com.melodify.musicapp.data.local.dao.LikedSongDao
 import com.melodify.musicapp.data.local.dao.MessageDao
 import com.melodify.musicapp.data.local.dao.PlaylistSongDao
 import com.melodify.musicapp.data.local.dao.SearchHistoryDao
+import com.melodify.musicapp.data.local.dao.PlaylistDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,7 +37,9 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             Constants.ROOM_DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration() // <--- ADD THIS LINE EXACTLY HERE
+            .build()
     }
 
     /**
@@ -44,6 +47,9 @@ object DatabaseModule {
      */
     @Provides
     fun provideSearchHistoryDao(db: AppDatabase): SearchHistoryDao = db.searchHistoryDao()
+
+    @Provides
+    fun providePlaylistDao(db: AppDatabase): PlaylistDao = db.playlistDao()
 
     /**
      * Provides LikedSongDao

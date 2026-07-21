@@ -27,10 +27,9 @@ class PlaylistViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val userId = currentUserProvider.getCurrentUser()?.id ?: ""
-                val userPlaylists = if (userId.isNotEmpty()) {
-                    playlistRepository.getUserPlaylists(userId)
-                } else emptyList()
+                // CHANGED: Load playlists for everyone (using local_user fallback)
+                val userId = currentUserProvider.getCurrentUser()?.id ?: "local_user"
+                val userPlaylists = playlistRepository.getUserPlaylists(userId)
 
                 // Mocking categories as per requirements
                 val internal = listOf(
@@ -42,7 +41,7 @@ class PlaylistViewModel @Inject constructor(
                     Playlist("g2", "Rock Classics", "Best of Rock", "", "system", 30, true)
                 )
 
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         userPlaylists = userPlaylists,
