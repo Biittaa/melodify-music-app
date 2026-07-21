@@ -40,6 +40,42 @@ class FirestoreDataSource @Inject constructor(
             .toObject<User>()
     }
 
+    suspend fun searchUsers(query:String):List<User>{
+
+        val q = query.lowercase()
+
+        val snapshot =
+            firestore.collection("users")
+                .whereGreaterThanOrEqualTo(
+                    "usernameSearch",
+                    q
+                )
+                .whereLessThanOrEqualTo(
+                    "usernameSearch",
+                    q+"\uf8ff"
+                )
+                .get()
+                .await()
+
+
+        return snapshot.documents.mapNotNull {
+            it.toObject(User::class.java)
+        }
+    }
+
+
+    suspend fun searchSongs(query:String):List<Song>{
+
+        val snapshot =
+            firestore.collection("songs")
+                .get()
+                .await()
+
+        return snapshot.documents.mapNotNull {
+            it.toObject<Song>()
+        }
+    }
+
     suspend fun updateUser(user: User) {
         firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
             .document(user.id)
@@ -132,14 +168,14 @@ class FirestoreDataSource @Inject constructor(
             .toObject<Song>()
     }
 
-    suspend fun searchSongs(query: String): List<Song> {
-        return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
-            .whereArrayContains("searchKeywords", query.lowercase())
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.toObject<Song>() }
-    }
+//    suspend fun searchSongs(query: String): List<Song> {
+//        return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
+//            .whereArrayContains("searchKeywords", query.lowercase())
+//            .get()
+//            .await()
+//            .documents
+//            .mapNotNull { it.toObject<Song>() }
+//    }
 
     suspend fun likeSong(userId: String, songId: String) {
         val likeData = mapOf(

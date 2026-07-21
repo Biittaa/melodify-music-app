@@ -36,4 +36,9 @@
     <string name="persian">Persian (RTL)</string>
     <string name="english">English (LTR)</string>
 
+    <string name="filter_all">All</string>
+    <string name="filter_songs">Songs</string>
+    <string name="filter_artists">Artists</string>
+    <string name="filter_users">Users</string>
+
 </resources>

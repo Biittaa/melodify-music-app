@@ -37,4 +37,10 @@
     <string name="english">English (چپ به راست)</string>
 
 
+    <string name="filter_all">همه</string>
+    <string name="filter_songs">آهنگ‌ها</string>
+    <string name="filter_artists">هنرمندان</string>
+    <string name="filter_users">کاربران</string>
+
+
 </resources>

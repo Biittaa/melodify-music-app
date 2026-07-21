@@ -46,4 +46,7 @@ interface UserRepository {
      * @return List of User objects the target follows
      */
     suspend fun getUserFollowing(userId: String): List<User>
+
+    suspend fun searchUsers(query: String): List<User>
+
 }

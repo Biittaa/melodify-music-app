@@ -6,6 +6,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.example.melodify.musicapp.domain.model.SearchResult
 import com.melodify.musicapp.domain.model.SearchHistory
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SearchRepository
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.melodify.musicapp.domain.model.SearchFilter
+import com.melodify.musicapp.domain.repository.UserRepository
 
 
 data class SearchUiState(
@@ -29,7 +31,8 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -39,23 +42,79 @@ class SearchViewModel @Inject constructor(
     private val _selectedFilter = MutableStateFlow(SearchFilter.All)
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val searchResults: Flow<PagingData<Song>> = combine(
-        _searchQuery.debounce(500L).distinctUntilChanged(),
-        _selectedFilter
-    ) { query, filter ->
-        query to filter
-    }.flatMapLatest { (query, filter) ->
-        if (query.isBlank()) {
-            flowOf(PagingData.empty())
-        } else {
-            Pager(
-                config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-                pagingSourceFactory = {
-                    songRepository.searchSongsPaging(query, filter) // <-- ارسال فیلتر
-                }
-            ).flow.cachedIn(viewModelScope)
+    val searchResults: Flow<PagingData<SearchResult>> =
+        combine(
+            _searchQuery.debounce(500),
+            _selectedFilter
+        ) { query, filter ->
+            query to filter
         }
-    }
+            .flatMapLatest { (query, filter) ->
+
+                if(query.isBlank()) {
+                    flowOf(PagingData.empty())
+                } else {
+
+                    flow {
+                        val results = mutableListOf<SearchResult>()
+
+                        when(filter) {
+
+                            SearchFilter.All -> {
+
+                                val songs = songRepository.searchSongs(query)
+
+                                val users = userRepository.searchUsers(query)
+
+
+                                results.addAll(
+                                    songs.map {
+                                        SearchResult.SongResult(it)
+                                    }
+                                )
+
+                                results.addAll(
+                                    users.map {
+                                        SearchResult.UserResult(it)
+                                    }
+                                )
+                            }
+
+
+                            SearchFilter.Songs -> {
+
+                                val songs = songRepository.searchSongs(query)
+
+                                results.addAll(
+                                    songs.map {
+                                        SearchResult.SongResult(it)
+                                    }
+                                )
+                            }
+
+
+                            SearchFilter.Users,
+                            SearchFilter.Artists -> {
+
+                                userRepository.searchUsers(query)
+                                    .map {
+                                        SearchResult.UserResult(it)
+                                    }
+                                    .also {
+                                        results.addAll(it)
+                                    }
+                            }
+                        }
+
+
+                        emit(
+                            PagingData.from(results)
+                        )
+                    }
+                }
+
+            }
+            .cachedIn(viewModelScope)
 
     init {
         loadHistory()

@@ -1,9 +1,12 @@
 package com.melodify.musicapp.data.repository
 
+import android.util.Log
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.UserRepository
 import com.melodify.musicapp.core.common.CurrentUserProvider
+import com.melodify.musicapp.core.common.MockData
+import com.melodify.musicapp.core.common.UserMockData
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,4 +41,46 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getUserFollowing(userId: String): List<User> {
         return firestoreDataSource.getFollowing(userId)
     }
-}
+
+//    override suspend fun searchUsers(query: String): List<User> {
+//        return firestoreDataSource.searchUsers(query)
+//    }
+
+    override suspend fun searchUsers(query: String): List<User> {
+
+        val local = emptyList<User>() // اگر Room/Cache داری اینجا
+
+        val remote = try {
+            firestoreDataSource.searchUsers(query)
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        val mock = UserMockData.users.filter {
+            it.username.contains(query, ignoreCase = true) ||
+                    it.fullName.contains(query, ignoreCase = true)
+        }
+
+        return (local + remote + mock)
+            .distinctBy { it.id }
+    }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
