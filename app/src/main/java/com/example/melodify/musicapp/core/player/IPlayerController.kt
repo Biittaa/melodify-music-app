@@ -1,0 +1,18 @@
+package com.melodify.musicapp.core.player
+
+import com.melodify.musicapp.domain.model.PlayerState
+import com.melodify.musicapp.domain.model.Song
+import kotlinx.coroutines.flow.Flow
+
+interface IPlayerController {
+    fun play(song: Song)
+    fun pause()
+    fun stop()
+    fun next()
+    fun previous()
+    fun seekTo(position: Long)
+    fun setSpeed(speed: Float)
+    fun toggleShuffle()
+    fun setRepeatMode(mode: Int)
+    fun getPlayerState(): Flow<PlayerState>
+}
