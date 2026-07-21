@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,11 +38,9 @@ class PlayerControllerImpl @Inject constructor(
     override fun play(song: Song) {
         if (currentSong?.id != song.id) {
             currentSong = song
-            
-            // ابتدا چک می‌کنیم آیا فایل به صورت آفلاین موجود است؟
             val localUri = downloadManager.getLocalFileUri(song.id)
             val uriToPlay = localUri ?: song.audioUrl
-            
+
             val mediaItem = MediaItem.fromUri(uriToPlay)
             exoPlayer.setMediaItem(mediaItem)
             exoPlayer.prepare()
@@ -133,7 +130,8 @@ class PlayerControllerImpl @Inject constructor(
         progressJob = CoroutineScope(Dispatchers.Main).launch {
             while (isActive) {
                 updateState()
-                delay(1000)
+                handleCrossfade()
+                delay(500) // Lower delay for smooth fade steps
             }
         }
     }
@@ -141,5 +139,27 @@ class PlayerControllerImpl @Inject constructor(
     private fun stopProgressUpdate() {
         progressJob?.cancel()
         progressJob = null
+    }
+
+    private fun handleCrossfade() {
+        val duration = exoPlayer.duration
+        val position = exoPlayer.currentPosition
+        if (duration > 0) {
+            val remaining = duration - position
+            // Fade-out: last 5 seconds of the song
+            if (remaining in 1..5000) {
+                val volume = remaining.toFloat() / 5000f
+                exoPlayer.volume = volume.coerceIn(0f, 1f)
+            }
+            // Fade-in: first 3 seconds of the song
+            else if (position in 0..3000) {
+                val volume = position.toFloat() / 3000f
+                exoPlayer.volume = volume.coerceIn(0f, 1f)
+            } else {
+                exoPlayer.volume = 1.0f
+            }
+        } else {
+            exoPlayer.volume = 1.0f
+        }
     }
 }

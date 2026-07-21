@@ -1,11 +1,14 @@
 package com.melodify.musicapp.feature.player
 
 import android.graphics.drawable.BitmapDrawable
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn // Resolved import
+import androidx.compose.foundation.lazy.items // Resolved import
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,8 +33,10 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.melodify.musicapp.R
 import com.melodify.musicapp.domain.model.PlayerState
 import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +49,7 @@ fun NowPlayingScreen(
 
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showTimerDialog by remember { mutableStateOf(false) }
+    var showShareDialog by remember { mutableStateOf(false) }
     var backgroundColor by remember { mutableStateOf(Color.DarkGray) }
     val context = LocalContext.current
 
@@ -50,7 +57,7 @@ fun NowPlayingScreen(
         val loader = ImageLoader(context)
         val request = ImageRequest.Builder(context)
             .data(song.coverUrl)
-            .allowHardware(false) // Required for Palette
+            .allowHardware(false)
             .build()
         val result = loader.execute(request)
         if (result is SuccessResult) {
@@ -77,18 +84,31 @@ fun NowPlayingScreen(
         )
     }
 
+    if (showShareDialog) {
+        val friends by viewModel.friendsList.collectAsState()
+        ShareSongDialog(
+            friends = friends,
+            onFriendSelected = { friend ->
+                viewModel.shareSongWithFriend(friend.id, song.id)
+                showShareDialog = false
+                Toast.makeText(context, "Song shared successfully!", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showShareDialog = false }
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(backgroundColor, Color.Black)))) {
         Column(modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBackClick) { Icon(Icons.Default.KeyboardArrowDown, null, tint = Color.White) }
-                Text("NOW PLAYING", color = Color.White, style = MaterialTheme.typography.labelLarge, letterSpacing = 2.sp)
-                IconButton(onClick = { /* More */ }) { Icon(Icons.Default.MoreVert, null, tint = Color.White) }
+                Text(stringResource(R.string.now_playing), color = Color.White, style = MaterialTheme.typography.labelLarge, letterSpacing = 2.sp)
+                IconButton(onClick = { showShareDialog = true }) { Icon(Icons.Default.Share, null, tint = Color.White) }
             }
             Spacer(modifier = Modifier.weight(0.5f))
             RotatingDisk(song = song, isPlaying = playerState.isPlaying)
             Spacer(modifier = Modifier.weight(0.5f))
             Text(song.title, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Artist Name", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
+            Text("Melodify Stream", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
             Spacer(modifier = Modifier.height(32.dp))
             WaveformVisualizer(isPlaying = playerState.isPlaying, color = backgroundColor)
             Spacer(modifier = Modifier.height(32.dp))
@@ -98,6 +118,13 @@ fun NowPlayingScreen(
             Spacer(modifier = Modifier.weight(0.5f))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                 IconButton(onClick = { showSpeedDialog = true }) { Icon(Icons.Default.Speed, null, tint = Color.White) }
+                IconButton(onClick = {
+                    viewModel.downloadSong(song.id) { message ->
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Icon(imageVector = Icons.Default.Download, contentDescription = "Download", tint = Color.White)
+                }
                 IconButton(onClick = { showTimerDialog = true }) { Icon(Icons.Default.Timer, null, tint = Color.White) }
             }
         }
@@ -105,10 +132,48 @@ fun NowPlayingScreen(
 }
 
 @Composable
+fun ShareSongDialog(friends: List<User>, onFriendSelected: (User) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Share Song with Friend") },
+        text = {
+            if (friends.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Text(text = "You are not following any users yet.", color = Color.Gray)
+                }
+            } else {
+                LazyColumn {
+                    items(friends) { friend ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onFriendSelected(friend) }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AsyncImage(
+                                model = friend.profileImage.ifEmpty { "https://www.w3schools.com/howto/img_avatar.png" },
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = friend.fullName, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}
+
+@Composable
 fun PlaybackSpeedDialog(currentSpeed: Float, onSpeedSelected: (Float) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Playback Speed") },
+        title = { Text(stringResource(R.string.playback_speed)) },
         text = {
             Column {
                 listOf(0.5f, 1.0f, 1.5f, 2.0f).forEach { speed ->
@@ -127,7 +192,7 @@ fun PlaybackSpeedDialog(currentSpeed: Float, onSpeedSelected: (Float) -> Unit, o
 fun SleepTimerDialog(onTimerSelected: (Int) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sleep Timer") },
+        title = { Text(stringResource(R.string.sleep_timer)) },
         text = {
             Column {
                 listOf(0, 15, 30, 60).forEach { mins ->

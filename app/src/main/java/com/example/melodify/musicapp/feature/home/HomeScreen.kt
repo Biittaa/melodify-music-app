@@ -1,4 +1,4 @@
-package com.melodify.musicapp.feature.home
+package com.example.melodify.musicapp.feature.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
-import com.melodify.musicapp.domain.model.Song
-import com.melodify.musicapp.ui.components.shimmerEffect
+import com.example.melodify.musicapp.domain.model.Song
+import com.example.melodify.musicapp.ui.components.shimmerEffect
 
 @Composable
 fun HomeScreen(
@@ -55,7 +55,7 @@ fun HomeScreen(
             item { QuickActionsSection(onQuickActionClick) }
             item { SongSection(title = stringResource(R.string.new_releases), songs = uiState.newestSongs, onSongClick = onSongClick) }
             item { SongSection(title = stringResource(R.string.trending), songs = uiState.trendingSongs, onSongClick = onSongClick) }
-            
+
             // Local Music Section
             val localSongs = uiState.trendingSongs.filter { it.id.startsWith("local_") }
             if (localSongs.isNotEmpty()) {

@@ -9,23 +9,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import com.melodify.musicapp.R
 import com.melodify.musicapp.domain.model.Message
-import com.melodify.musicapp.domain.model.Song
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,10 +39,15 @@ fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val otherUserTyping by viewModel.otherUserTyping.collectAsState()
     var messageText by remember { mutableStateOf("") }
 
     LaunchedEffect(otherUserId) {
         viewModel.observeMessages(otherUserId)
+    }
+
+    LaunchedEffect(messageText) {
+        viewModel.setTypingStatus(otherUserId, messageText.isNotEmpty())
     }
 
     Scaffold(
@@ -49,8 +55,8 @@ fun ChatScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(text = "User $otherUserId", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        if (uiState.isTyping) {
+                        Text(text = stringResource(R.string.profile) + " $otherUserId", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        if (otherUserTyping) {
                             Text(text = "is typing...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
@@ -124,7 +130,7 @@ fun MessageBubble(message: Message, isMine: Boolean, onSongClick: (String) -> Un
                     }
                 }
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.createdAt)),
@@ -133,11 +139,18 @@ fun MessageBubble(message: Message, isMine: Boolean, onSongClick: (String) -> Un
                 )
                 if (isMine) {
                     Spacer(modifier = Modifier.width(4.dp))
+                    val statusIcon = when {
+                        !message.isSent -> Icons.Default.AccessTime  // Sending
+                        message.isSeen -> Icons.Default.DoneAll       // Read / Seen
+                        else -> Icons.Default.Done                   // Sent
+                    }
+                    val statusColor = if (message.isSeen) Color.Cyan else Color.Gray
+
                     Icon(
-                        imageVector = if (message.isSeen) Icons.Default.DoneAll else Icons.Default.Done,
+                        imageVector = statusIcon,
                         contentDescription = null,
                         modifier = Modifier.size(12.dp),
-                        tint = if (message.isSeen) Color.Cyan else Color.Gray
+                        tint = statusColor
                     )
                 }
             }
@@ -147,7 +160,6 @@ fun MessageBubble(message: Message, isMine: Boolean, onSongClick: (String) -> Un
 
 @Composable
 fun SongShareCard(songId: String, onClick: () -> Unit) {
-    // Mini UI for shared song
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,7 +173,12 @@ fun SongShareCard(songId: String, onClick: () -> Unit) {
         ) {
             Icon(Icons.Default.MusicNote, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Shared Music", color = Color.White, fontSize = 14.sp)
+            Column {
+                Text(text = stringResource(R.string.trending), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(text = "Play Song", color = Color.LightGray, fontSize = 12.sp)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
         }
     }
 }
@@ -185,7 +202,7 @@ fun ChatInput(
             TextField(
                 value = messageText,
                 onValueChange = onMessageChange,
-                placeholder = { Text("پیام...") },
+                placeholder = { Text(stringResource(R.string.search_placeholder)) },
                 modifier = Modifier.weight(1f),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,

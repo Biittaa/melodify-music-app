@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val settings by settingsRepository.getSettingsFlow().collectAsState(initial = null)
-            
+
             // درخواست مجوز دسترسی به فایل‌های صوتی
             val permissionLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestPermission()

@@ -10,6 +10,7 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.core.player.IPlayerController
 import com.melodify.musicapp.core.player.PlayerControllerImpl
@@ -46,11 +47,18 @@ abstract class CoreModule {
         @Singleton
         fun provideExoPlayer(
             @ApplicationContext context: Context,
-            audioAttributes: AudioAttributes
-        ): ExoPlayer = ExoPlayer.Builder(context)
-            .setAudioAttributes(audioAttributes, true) // Handles Audio Focus automatically
-            .setHandleAudioBecomingNoisy(true)
-            .build()
+            audioAttributes: AudioAttributes,
+            cacheDataSourceFactory: CacheDataSource.Factory
+        ): ExoPlayer {
+            val mediaSourceFactory = DefaultMediaSourceFactory(context)
+                .setDataSourceFactory(cacheDataSourceFactory)
+
+            return ExoPlayer.Builder(context)
+                .setAudioAttributes(audioAttributes, true)
+                .setHandleAudioBecomingNoisy(true)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .build()
+        }
 
         @Provides
         @Singleton

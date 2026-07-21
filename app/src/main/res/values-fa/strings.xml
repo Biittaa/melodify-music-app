@@ -3,28 +3,28 @@
     <string name="home">خانه</string>
     <string name="search">جستجو</string>
     <string name="downloads">دانلودها</string>
-    <string name="playlists">لیست‌های پخش</string>
-    <string name="profile">پروفایل</string>
+    <string name="playlists">پلی‌لیست‌ها</string>
+    <string name="profile">پروفایل من</string>
 
-    <string name="trending">در حال ترند</string>
-    <string name="new_releases">جدیدترین‌ها</string>
-    <string name="popular_playlists">لیست‌های محبوب</string>
-    <string name="liked_songs">آهنگ‌های پسندیده</string>
+    <string name="trending">ترندهای روز</string>
+    <string name="new_releases">آهنگ‌های جدید</string>
+    <string name="popular_playlists">پلی‌لیست‌های محبوب</string>
+    <string name="liked_songs">موسیقی‌های لایک شده</string>
     <string name="recently_played">اخیراً شنیده شده</string>
     <string name="top_artists">هنرمندان برتر</string>
-    <string name="my_playlists">لیست‌های من</string>
+    <string name="my_playlists">پلی‌لیست‌های من</string>
 
-    <string name="premium_required">برای این قابلیت نیاز به حساب ویژه دارید</string>
+    <string name="premium_required">برای استفاده از این قابلیت نیاز به اشتراک ویژه دارید</string>
     <string name="search_placeholder">آهنگ، هنرمند یا آلبوم...</string>
     <string name="no_downloads">هنوز آهنگی دانلود نشده است</string>
-    <string name="no_playlists">هنوز لیست پخشی نساخته‌اید</string>
+    <string name="no_playlists">شما هنوز پلی‌لیستی نساخته‌اید</string>
 
     <string name="settings">تنظیمات</string>
-    <string name="language">زبان</string>
-    <string name="dark_mode">حالت شب</string>
-    <string name="logout">خروج</string>
+    <string name="language">زبان برنامه</string>
+    <string name="dark_mode">تم تاریک</string>
+    <string name="logout">خروج از حساب کاربری</string>
     <string name="premium_status">وضعیت اشتراک</string>
-    <string name="upgrade_to_premium">ارتقا به حساب ویژه</string>
+    <string name="upgrade_to_premium">خرید اشتراک ویژه</string>
 
     <string name="now_playing">در حال پخش</string>
     <string name="sleep_timer">تایمر خواب</string>

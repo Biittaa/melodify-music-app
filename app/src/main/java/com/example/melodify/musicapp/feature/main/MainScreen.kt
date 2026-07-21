@@ -1,6 +1,8 @@
+@file:JvmName("MainScreenKt") // Forces exact case matching for stubs on Windows
 package com.melodify.musicapp.feature.main
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -24,7 +26,7 @@ import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 import com.melodify.musicapp.feature.auth.LoginScreen
 import com.melodify.musicapp.feature.auth.RegisterScreen
-import com.melodify.musicapp.feature.home.HomeScreen
+import com.example.melodify.musicapp.feature.home.HomeScreen
 import com.melodify.musicapp.feature.search.SearchScreen
 import com.melodify.musicapp.feature.downloads.DownloadsScreen
 import com.melodify.musicapp.feature.playlists.PlaylistsScreen
@@ -38,7 +40,8 @@ import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
 import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.social.SocialScreen
-
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.Playlist
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
     object Home : Screen("home", R.string.home, Icons.Default.Home)
     object Search : Screen("search", R.string.search, Icons.Default.Search)
@@ -65,7 +68,6 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
     val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
 
-    // Unified Auth Check
     LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
         if (!profileUiState.isLoading && profileUiState.user == null) {
             navController.navigate(Screen.Login.route) {
@@ -78,20 +80,43 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
         Scaffold(
             topBar = {
                 val currentRoute = currentDestination?.route ?: ""
-                val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
                 val isMainTab = bottomNavItems.any { it.route == currentRoute }
 
                 if (isMainTab) {
-                    CenterAlignedTopAppBar(
-                        title = { Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary) },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
-                                Icon(Icons.Default.Settings, contentDescription = null)
+                    TopAppBar(
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.MusicNote,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                             }
                         },
                         actions = {
                             IconButton(onClick = { navController.navigate(Screen.ChatList.route) }) {
-                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null)
+                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Live Chat")
+                            }
+                            IconButton(onClick = { /* Simulated notification panel */ }) {
+                                Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                            }
+                            IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                                Icon(Icons.Default.Settings, contentDescription = "Settings")
+                            }
+                            profileUiState.user?.let { user ->
+                                AsyncImage(
+                                    model = user.profileImage.ifEmpty { "https://www.w3schools.com/howto/img_avatar.png" },
+                                    contentDescription = "Profile",
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .clickable { navController.navigate(Screen.Profile.route) },
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
                             }
                         }
                     )
@@ -145,7 +170,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 composable(Screen.Home.route) {
                     HomeScreen(
                         onSongClick = { showNowPlaying = true },
-                        onQuickActionClick = { action ->
+                        onQuickActionClick = { action: String ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
                                 "playlists" -> navController.navigate(Screen.Playlists.route)
@@ -164,9 +189,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 composable(Screen.Profile.route) {
                     ProfileScreen(
                         onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                        onLogoutClick = {
-                            profileViewModel.logout()
-                        }
+                        onLogoutClick = { profileViewModel.logout() }
                     )
                 }
                 composable(Screen.Settings.route) { SettingsScreen(onBackClick = { navController.popBackStack() }) }

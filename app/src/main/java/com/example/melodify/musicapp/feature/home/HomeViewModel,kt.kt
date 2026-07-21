@@ -1,9 +1,9 @@
-package com.melodify.musicapp.feature.home
+package com.example.melodify.musicapp.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.melodify.musicapp.domain.model.Song
-import com.melodify.musicapp.domain.repository.SongRepository
+import com.example.melodify.musicapp.domain.model.Song
+import com.example.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -33,16 +33,15 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // In a real app, combine these or use a specific HomeUseCase
                 val trending = songRepository.getTrendingSongs()
                 val newest = songRepository.getLatestSongs()
-                
-                _uiState.update { 
+
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         trendingSongs = trending,
                         newestSongs = newest,
-                        popularSongs = trending.shuffled() // Mocking popular
+                        popularSongs = trending.shuffled()
                     )
                 }
             } catch (e: Exception) {

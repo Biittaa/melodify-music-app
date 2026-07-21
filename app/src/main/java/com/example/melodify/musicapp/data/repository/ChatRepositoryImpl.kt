@@ -20,10 +20,6 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of ChatRepository
- * Handles real-time messaging with Firestore and offline support with Room
- */
 @Singleton
 class ChatRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -31,6 +27,20 @@ class ChatRepositoryImpl @Inject constructor(
     private val conversationDao: ConversationDao,
     private val currentUserProvider: CurrentUserProvider
 ) : ChatRepository {
+
+    override fun getConversationsFlow(): Flow<List<Conversation>> {
+        return conversationDao.getAll().map { entities ->
+            entities.map { entity ->
+                Conversation(
+                    id = entity.userId,
+                    userId = entity.userId,
+                    lastMessage = entity.lastMessage,
+                    lastMessageTime = entity.lastMessageTime,
+                    unreadCount = entity.unreadCount
+                )
+            }
+        }
+    }
 
     override suspend fun getConversations(): List<Conversation> {
         val entities = conversationDao.getAll().firstOrNull() ?: emptyList()
@@ -57,6 +67,7 @@ class ChatRepositoryImpl @Inject constructor(
                 songId = entity.songId,
                 createdAt = entity.createdAt,
                 isSeen = entity.isSeen,
+                isSent = entity.isSent,
                 participants = entity.participants
             )
         }
@@ -81,9 +92,11 @@ class ChatRepositoryImpl @Inject constructor(
             text = text,
             songId = null,
             createdAt = System.currentTimeMillis(),
-            isSeen = false
+            isSeen = false,
+            isSent = false // Start local with 'sending/clock' status
         )
-        firestoreDataSource.sendMessage(message)
+
+        // Save local immediately in sending state
         messageDao.insert(
             MessageEntity(
                 id = message.id,
@@ -93,11 +106,31 @@ class ChatRepositoryImpl @Inject constructor(
                 songId = message.songId,
                 createdAt = message.createdAt,
                 isSeen = message.isSeen,
-                isSent = true,
+                isSent = false,
                 participants = message.participants
             )
         )
         updateConversation(receiverId, text, System.currentTimeMillis())
+
+        try {
+            firestoreDataSource.sendMessage(message)
+            // Update local to 'sent'
+            messageDao.insert(
+                MessageEntity(
+                    id = message.id,
+                    senderId = message.senderId,
+                    receiverId = message.receiverId,
+                    text = message.text,
+                    songId = message.songId,
+                    createdAt = message.createdAt,
+                    isSeen = message.isSeen,
+                    isSent = true,
+                    participants = message.participants
+                )
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun sendSong(receiverId: String, songId: String) {
@@ -109,7 +142,8 @@ class ChatRepositoryImpl @Inject constructor(
             text = "🎵 A song was shared",
             songId = songId,
             createdAt = System.currentTimeMillis(),
-            isSeen = false
+            isSeen = false,
+            isSent = true
         )
         firestoreDataSource.sendMessage(message)
         messageDao.insert(
@@ -145,10 +179,21 @@ class ChatRepositoryImpl @Inject constructor(
                     songId = entity.songId,
                     createdAt = entity.createdAt,
                     isSeen = entity.isSeen,
+                    isSent = entity.isSent,
                     participants = entity.participants
                 )
             }
         }
+    }
+
+    override fun observeTypingStatus(otherUserId: String): Flow<Boolean> {
+        val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return emptyFlow()
+        return firestoreDataSource.observeTypingStatus(currentUserId, otherUserId)
+    }
+
+    override suspend fun setTypingStatus(otherUserId: String, isTyping: Boolean) {
+        val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
+        firestoreDataSource.setTypingStatus(currentUserId, otherUserId, isTyping)
     }
 
     private suspend fun updateConversation(userId: String, lastMessage: String, time: Long) {

@@ -16,12 +16,6 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Remote data source for Firebase Firestore
- * Handles all CRUD operations on collections: users, songs, playlists, messages, likes, follows
- *
- * @property firestore Public instance of FirebaseFirestore (exposed for PagingSource usage)
- */
 @Singleton
 class FirestoreDataSource @Inject constructor(
     val firestore: FirebaseFirestore
@@ -29,9 +23,6 @@ class FirestoreDataSource @Inject constructor(
 
     // ==================== Users ====================
 
-    /**
-     * Create a new user document in Firestore
-     */
     suspend fun createUser(user: User) {
         firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
             .document(user.id)
@@ -39,10 +30,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Get a user document by ID
-     * @return User object or null if not found
-     */
     suspend fun getUser(userId: String): User? {
         return firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
             .document(userId)
@@ -51,9 +38,6 @@ class FirestoreDataSource @Inject constructor(
             .toObject<User>()
     }
 
-    /**
-     * Update an existing user document
-     */
     suspend fun updateUser(user: User) {
         firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
             .document(user.id)
@@ -61,9 +45,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Create a follow relationship between two users
-     */
     suspend fun followUser(followerId: String, followingId: String) {
         val followData = mapOf(
             "followerId" to followerId,
@@ -85,9 +66,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Remove a follow relationship between two users
-     */
     suspend fun unfollowUser(followerId: String, followingId: String) {
         val query = firestore.collection(Constants.FIREBASE_FOLLOWS_COLLECTION)
             .whereEqualTo("followerId", followerId)
@@ -106,9 +84,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Get list of followers for a specific user
-     */
     suspend fun getFollowers(userId: String): List<User> {
         val query = firestore.collection(Constants.FIREBASE_FOLLOWS_COLLECTION)
             .whereEqualTo("followingId", userId)
@@ -117,9 +92,6 @@ class FirestoreDataSource @Inject constructor(
         return followerIds.mapNotNull { getUser(it) }
     }
 
-    /**
-     * Get list of users that a specific user is following
-     */
     suspend fun getFollowing(userId: String): List<User> {
         val query = firestore.collection(Constants.FIREBASE_FOLLOWS_COLLECTION)
             .whereEqualTo("followerId", userId)
@@ -130,9 +102,6 @@ class FirestoreDataSource @Inject constructor(
 
     // ==================== Songs ====================
 
-    /**
-     * Get trending songs ordered by play count
-     */
     suspend fun getTrendingSongs(limit: Int = 20): List<Song> {
         return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
             .orderBy("playCount", Query.Direction.DESCENDING)
@@ -143,9 +112,6 @@ class FirestoreDataSource @Inject constructor(
             .mapNotNull { it.toObject<Song>() }
     }
 
-    /**
-     * Get latest songs ordered by added date
-     */
     suspend fun getLatestSongs(limit: Int = 20): List<Song> {
         return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
             .orderBy("addedAt", Query.Direction.DESCENDING)
@@ -156,9 +122,6 @@ class FirestoreDataSource @Inject constructor(
             .mapNotNull { it.toObject<Song>() }
     }
 
-    /**
-     * Get a single song by ID
-     */
     suspend fun getSong(songId: String): Song? {
         return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
             .document(songId)
@@ -167,10 +130,6 @@ class FirestoreDataSource @Inject constructor(
             .toObject<Song>()
     }
 
-    /**
-     * Search songs using keyword matching (simple implementation)
-     * Note: For production, consider using Algolia or Elasticsearch
-     */
     suspend fun searchSongs(query: String): List<Song> {
         return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
             .whereArrayContains("searchKeywords", query.lowercase())
@@ -180,9 +139,6 @@ class FirestoreDataSource @Inject constructor(
             .mapNotNull { it.toObject<Song>() }
     }
 
-    /**
-     * Like a song for a specific user
-     */
     suspend fun likeSong(userId: String, songId: String) {
         val likeData = mapOf(
             "userId" to userId,
@@ -194,9 +150,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Remove a like from a song
-     */
     suspend fun unlikeSong(userId: String, songId: String) {
         val query = firestore.collection(Constants.FIREBASE_LIKES_COLLECTION)
             .whereEqualTo("userId", userId)
@@ -207,9 +160,6 @@ class FirestoreDataSource @Inject constructor(
 
     // ==================== Playlists ====================
 
-    /**
-     * Get all playlists owned by a user
-     */
     suspend fun getUserPlaylists(userId: String): List<Playlist> {
         return firestore.collection(Constants.FIREBASE_PLAYLISTS_COLLECTION)
             .whereEqualTo("ownerId", userId)
@@ -219,9 +169,6 @@ class FirestoreDataSource @Inject constructor(
             .mapNotNull { it.toObject<Playlist>() }
     }
 
-    /**
-     * Create a new playlist document
-     */
     suspend fun createPlaylist(playlist: Playlist) {
         firestore.collection(Constants.FIREBASE_PLAYLISTS_COLLECTION)
             .document(playlist.id)
@@ -229,9 +176,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Update an existing playlist
-     */
     suspend fun updatePlaylist(playlist: Playlist) {
         firestore.collection(Constants.FIREBASE_PLAYLISTS_COLLECTION)
             .document(playlist.id)
@@ -239,9 +183,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Delete a playlist by ID
-     */
     suspend fun deletePlaylist(playlistId: String) {
         firestore.collection(Constants.FIREBASE_PLAYLISTS_COLLECTION)
             .document(playlistId)
@@ -249,9 +190,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Add a song to a playlist
-     */
     suspend fun addSongToPlaylist(playlistId: String, songId: String) {
         val data = mapOf(
             "playlistId" to playlistId,
@@ -263,9 +201,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Remove a song from a playlist
-     */
     suspend fun removeSongFromPlaylist(playlistId: String, songId: String) {
         val query = firestore.collection(Constants.FIREBASE_PLAYLIST_SONGS_COLLECTION)
             .whereEqualTo("playlistId", playlistId)
@@ -274,9 +209,6 @@ class FirestoreDataSource @Inject constructor(
         snapshot.documents.forEach { it.reference.delete().await() }
     }
 
-    /**
-     * Get all songs in a playlist
-     */
     suspend fun getPlaylistSongs(playlistId: String): List<Song> {
         val query = firestore.collection(Constants.FIREBASE_PLAYLIST_SONGS_COLLECTION)
             .whereEqualTo("playlistId", playlistId)
@@ -285,12 +217,8 @@ class FirestoreDataSource @Inject constructor(
         return songIds.mapNotNull { getSong(it) }
     }
 
-    // ==================== Messages (Real-time Chat) ====================
+    // ==================== Messages & Social Direct Message ====================
 
-    /**
-     * Send a message to Firestore
-     * Automatically sets participants for efficient querying
-     */
     suspend fun sendMessage(message: Message) {
         val messageWithParticipants = message.copy(
             participants = listOf(message.senderId, message.receiverId)
@@ -301,12 +229,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Observe messages between two users in real-time using Firestore Snapshots
-     * @param userId The other user's ID
-     * @param currentUserId The current logged-in user's ID
-     * @return Flow emitting list of messages
-     */
     fun observeMessages(userId: String, currentUserId: String): Flow<List<Message>> = callbackFlow {
         val listener = firestore.collection(Constants.FIREBASE_MESSAGES_COLLECTION)
             .whereIn("senderId", listOf(userId, currentUserId))
@@ -323,13 +245,6 @@ class FirestoreDataSource @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    /**
-     * Observe ALL messages involving a specific user in real-time
-     * Uses the "participants" array field for efficient querying
-     * This is used by ChatSyncService to sync all conversations globally
-     * @param userId The current user's ID
-     * @return Flow emitting list of all messages involving this user
-     */
     fun observeAllMessagesForUser(userId: String): Flow<List<Message>> = callbackFlow {
         val listener = firestore.collection(Constants.FIREBASE_MESSAGES_COLLECTION)
             .whereArrayContains("participants", userId)
@@ -345,9 +260,6 @@ class FirestoreDataSource @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    /**
-     * Mark a specific message as seen/read
-     */
     suspend fun markMessageAsSeen(messageId: String) {
         firestore.collection(Constants.FIREBASE_MESSAGES_COLLECTION)
             .document(messageId)
@@ -355,9 +267,6 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    /**
-     * Get all messages for a user (without real-time) - useful for initial load
-     */
     suspend fun getMessagesForUser(userId: String, currentUserId: String): List<Message> {
         return firestore.collection(Constants.FIREBASE_MESSAGES_COLLECTION)
             .whereIn("senderId", listOf(userId, currentUserId))
@@ -367,5 +276,30 @@ class FirestoreDataSource @Inject constructor(
             .await()
             .documents
             .mapNotNull { it.toObject<Message>() }
+    }
+
+    // ==================== Real-time Typing Status Indicator ====================
+
+    fun observeTypingStatus(userId: String, otherUserId: String): Flow<Boolean> = callbackFlow {
+        val docId = if (userId < otherUserId) "${userId}_$otherUserId" else "${otherUserId}_$userId"
+        val listener = firestore.collection("typing_status")
+            .document(docId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val isTyping = snapshot?.getBoolean(otherUserId) ?: false
+                trySend(isTyping)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun setTypingStatus(userId: String, otherUserId: String, isTyping: Boolean) {
+        val docId = if (userId < otherUserId) "${userId}_$otherUserId" else "${otherUserId}_$userId"
+        firestore.collection("typing_status")
+            .document(docId)
+            .set(mapOf(userId to isTyping), com.google.firebase.firestore.SetOptions.merge())
+            .await()
     }
 }
