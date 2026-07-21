@@ -16,10 +16,9 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.melodify.musicapp.domain.model.SearchFilter
 
-enum class SearchFilter {
-    All, Songs, Artists, Albums, Users
-}
+
 
 data class SearchUiState(
     val query: String = "",
@@ -42,7 +41,7 @@ class SearchViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val searchResults: Flow<PagingData<Song>> = combine(
         _searchQuery.debounce(500L).distinctUntilChanged(),
-        _selectedFilter.distinctUntilChanged()
+        _selectedFilter
     ) { query, filter ->
         query to filter
     }.flatMapLatest { (query, filter) ->

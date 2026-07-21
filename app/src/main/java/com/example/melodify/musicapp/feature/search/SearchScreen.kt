@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.ui.components.shimmerEffect
+import com.melodify.musicapp.domain.model.SearchFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,5 +1,5 @@
 @file:JvmName("MainScreenKt")
-package com.example.melodify.musicapp.feature.main
+package com.melodify.musicapp.feature.main
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
@@ -25,6 +25,7 @@ import androidx.navigation.compose.*
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 
+
 // Domain models
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.Playlist
@@ -44,7 +45,7 @@ import com.melodify.musicapp.feature.settings.SettingsScreen
 import com.melodify.musicapp.feature.chat.ConversationsScreen
 import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
-import com.example.melodify.musicapp.feature.profile.ProfileViewModel
+import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.player.PlayerViewModel
 import com.melodify.musicapp.feature.artist.ArtistScreen
 import com.melodify.musicapp.feature.recent.RecentSongsScreen   // <-- صفحه جدید

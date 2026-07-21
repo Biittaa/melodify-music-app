@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.melodify.musicapp.feature.profile.ProfileViewModel
+import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.R
 import com.melodify.musicapp.ui.theme.PremiumGold
 

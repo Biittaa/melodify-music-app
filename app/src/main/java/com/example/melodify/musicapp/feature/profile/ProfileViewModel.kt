@@ -1,4 +1,4 @@
-package com.example.melodify.musicapp.feature.profile
+package com.melodify.musicapp.feature.profile
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 data class ProfileUiState(
     val user: User? = null,

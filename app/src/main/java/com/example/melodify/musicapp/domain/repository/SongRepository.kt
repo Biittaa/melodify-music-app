@@ -2,6 +2,7 @@ package com.melodify.musicapp.domain.repository // Unified Package
 
 import androidx.paging.PagingSource
 import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.SearchFilter
 
 interface SongRepository {
     suspend fun getTrendingSongs(): List<Song>

@@ -1,11 +1,10 @@
-package com.example.melodify.musicapp.data.paging
+package com.melodify.musicapp.data.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
-import com.melodify.musicapp.feature.search.SearchFilter
-
+import com.melodify.musicapp.domain.model.SearchFilter
 /**
  * PagingSource for searching songs with optional filter.
  */
