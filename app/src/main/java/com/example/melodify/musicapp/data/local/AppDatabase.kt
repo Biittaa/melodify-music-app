@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.melodify.musicapp.core.common.Constants
-import com.melodify.musicapp.data.local.converter.Converters
+import com.melodify.musicapp.data.local.converter.MessageConverters
 import com.melodify.musicapp.data.local.dao.*
 import com.melodify.musicapp.data.local.entity.*
 
@@ -22,10 +22,9 @@ import com.melodify.musicapp.data.local.entity.*
     version = 1,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
+@TypeConverters(MessageConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    // ---------- DAOها ----------
     abstract fun searchHistoryDao(): SearchHistoryDao
     abstract fun likedSongDao(): LikedSongDao
     abstract fun downloadedSongDao(): DownloadedSongDao
@@ -33,7 +32,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun conversationDao(): ConversationDao
     abstract fun playlistSongDao(): PlaylistSongDao
 
-    // ---------- Singleton ----------
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null

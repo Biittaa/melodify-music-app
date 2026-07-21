@@ -2,8 +2,6 @@ package com.melodify.musicapp.data.repository
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import androidx.paging.LoadParams
-import androidx.paging.LoadResult
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.data.local.dao.ConversationDao
 import com.melodify.musicapp.data.local.dao.MessageDao
@@ -16,6 +14,7 @@ import com.melodify.musicapp.domain.model.Message
 import com.melodify.musicapp.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
@@ -24,7 +23,6 @@ import javax.inject.Singleton
 /**
  * Implementation of ChatRepository
  * Handles real-time messaging with Firestore and offline support with Room
- * Real-time messages are synced via ChatSyncService
  */
 @Singleton
 class ChatRepositoryImpl @Inject constructor(
@@ -35,7 +33,6 @@ class ChatRepositoryImpl @Inject constructor(
 ) : ChatRepository {
 
     override suspend fun getConversations(): List<Conversation> {
-        // Fetch from Room (offline cache)
         val entities = conversationDao.getAll().firstOrNull() ?: emptyList()
         return entities.map { entity ->
             Conversation(
@@ -50,7 +47,6 @@ class ChatRepositoryImpl @Inject constructor(
 
     override suspend fun getMessages(userId: String): List<Message> {
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return emptyList()
-        // Fetch from Room
         val entities = messageDao.getMessagesForUser(userId, currentUserId).firstOrNull() ?: emptyList()
         return entities.map { entity ->
             Message(
@@ -87,9 +83,7 @@ class ChatRepositoryImpl @Inject constructor(
             createdAt = System.currentTimeMillis(),
             isSeen = false
         )
-        // Send to Firestore
         firestoreDataSource.sendMessage(message)
-        // Save to Room (offline cache)
         messageDao.insert(
             MessageEntity(
                 id = message.id,
@@ -139,14 +133,8 @@ class ChatRepositoryImpl @Inject constructor(
         messageDao.markAsSeen(messageId)
     }
 
-    /**
-     * Observe real-time messages from a specific user
-     * Data is read from Room which is continuously updated by ChatSyncService
-     * This ensures offline support and real-time updates
-     */
     override fun observeMessages(userId: String): Flow<List<Message>> {
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return emptyFlow()
-        // Reading from Room - ChatSyncService keeps Room updated in real-time
         return messageDao.getMessagesForUser(userId, currentUserId).map { entities ->
             entities.map { entity ->
                 Message(
@@ -163,22 +151,16 @@ class ChatRepositoryImpl @Inject constructor(
         }
     }
 
-    /**
-     * Helper method to update conversation list
-     */
     private suspend fun updateConversation(userId: String, lastMessage: String, time: Long) {
         val conv = ConversationEntity(
             userId = userId,
             lastMessage = lastMessage,
             lastMessageTime = time,
-            unreadCount = 0 // Calculated separately
+            unreadCount = 0
         )
         conversationDao.insert(conv)
     }
 
-    /**
-     * Empty PagingSource for when user is not logged in
-     */
     private class EmptyPagingSource : PagingSource<Int, MessageEntity>() {
         override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MessageEntity> {
             return LoadResult.Page(emptyList(), null, null)
