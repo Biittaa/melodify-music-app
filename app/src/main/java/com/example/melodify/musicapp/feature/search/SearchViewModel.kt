@@ -19,7 +19,6 @@ import javax.inject.Inject
 import com.melodify.musicapp.domain.model.SearchFilter
 
 
-
 data class SearchUiState(
     val query: String = "",
     val history: List<SearchHistory> = emptyList(),

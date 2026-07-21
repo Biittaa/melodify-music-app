@@ -80,13 +80,13 @@ fun MainScreen(
     val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
 
-    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
-        if (!profileUiState.isLoading && profileUiState.user == null) {
-            navController.navigate(Screen.Login.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
+//    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
+//        if (!profileUiState.isLoading && profileUiState.user == null) {
+//            navController.navigate(Screen.Login.route) {
+//                popUpTo(0) { inclusive = true }
+//            }
+//        }
+//    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -105,7 +105,12 @@ fun MainScreen(
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+//                                Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    stringResource(R.string.app_name),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         },
                         actions = {

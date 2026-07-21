@@ -18,38 +18,99 @@ class SettingsViewModel @Inject constructor(
     val settings: StateFlow<Settings> = _settings.asStateFlow()
 
     init {
-        loadSettings()
-    }
-
-    private fun loadSettings() {
         viewModelScope.launch {
-            _settings.value = settingsRepository.getSettings()
+            settingsRepository.getSettingsFlow()
+                .collect { settings ->
+                    _settings.value = settings
+                }
         }
     }
+
     fun setFontScale(scale: Float) {
         viewModelScope.launch {
             settingsRepository.setFontScale(scale)
-            _settings.update { it.copy(fontScale = scale) }
+            _settings.update {
+                it.copy(fontScale = scale)
+            }
         }
     }
 
     fun setNotificationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setNotification(enabled)
-            _settings.update { it.copy(notificationEnabled = enabled) }
+            _settings.update {
+                it.copy(notificationEnabled = enabled)
+            }
         }
     }
+
     fun toggleDarkMode(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setDarkMode(enabled)
-            _settings.update { it.copy(darkMode = enabled) }
+            _settings.update {
+                it.copy(darkMode = enabled)
+            }
         }
     }
 
     fun setLanguage(language: String) {
         viewModelScope.launch {
             settingsRepository.setLanguage(language)
-            _settings.update { it.copy(language = language) }
+            _settings.update {
+                it.copy(language = language)
+            }
         }
     }
 }
+//class SettingsViewModel @Inject constructor(
+//    private val settingsRepository: SettingsRepository
+//) : ViewModel() {
+//
+////    private val _settings = MutableStateFlow(Settings())
+//    init {
+//        viewModelScope.launch {
+//            settingsRepository.getSettingsFlow()
+//                .collect {
+//                    _settings.value = it
+//                }
+//        }
+//    }
+//    val settings: StateFlow<Settings> = _settings.asStateFlow()
+//
+//
+////    init {
+////        loadSettings()
+////    }
+//
+////    private fun loadSettings() {
+////        viewModelScope.launch {
+////            _settings.value = settingsRepository.getSettings()
+////        }
+////    }
+//    fun setFontScale(scale: Float) {
+//        viewModelScope.launch {
+//            settingsRepository.setFontScale(scale)
+//            _settings.update { it.copy(fontScale = scale) }
+//        }
+//    }
+//
+//    fun setNotificationEnabled(enabled: Boolean) {
+//        viewModelScope.launch {
+//            settingsRepository.setNotification(enabled)
+//            _settings.update { it.copy(notificationEnabled = enabled) }
+//        }
+//    }
+//    fun toggleDarkMode(enabled: Boolean) {
+//        viewModelScope.launch {
+//            settingsRepository.setDarkMode(enabled)
+//            _settings.update { it.copy(darkMode = enabled) }
+//        }
+//    }
+//
+//    fun setLanguage(language: String) {
+//        viewModelScope.launch {
+//            settingsRepository.setLanguage(language)
+//            _settings.update { it.copy(language = language) }
+//        }
+//    }
+//}

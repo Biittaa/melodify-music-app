@@ -65,14 +65,14 @@ fun SettingsScreen(
                         selected = settings.language == "fa",
                         onClick = { viewModel.setLanguage("fa") }
                     )
-                    Text(text = "فارسی (RTL)", modifier = Modifier.padding(start = 8.dp))
+                    Text((stringResource(R.string.persian)), modifier = Modifier.padding(start = 8.dp))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = settings.language == "en",
                         onClick = { viewModel.setLanguage("en") }
                     )
-                    Text(text = "English (LTR)", modifier = Modifier.padding(start = 8.dp))
+                    Text((stringResource(R.string.english)), modifier = Modifier.padding(start = 8.dp))
                 }
             }
 
@@ -80,15 +80,22 @@ fun SettingsScreen(
 
             // Font Scale
             Column {
-                Text(text = "اندازه فونت", style = MaterialTheme.typography.labelLarge)
+                Text((stringResource(R.string.font_size)), style = MaterialTheme.typography.labelLarge)
                 Slider(
                     value = settings.fontScale,
                     onValueChange = { viewModel.setFontScale(it) },
                     valueRange = 0.8f..1.5f,
                     steps = 7
                 )
-                Text(text = "مقدار: ${settings.fontScale}", style = MaterialTheme.typography.bodySmall)
+//                Text(text = "مقدار: ${settings.fontScale}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                        stringResource(
+                            R.string.font_scale,
+                            settings.fontScale
+                        )
+                    )
             }
+
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -98,7 +105,8 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "اعلان‌ها")
+//                Text(text = "اعلان‌ها")
+                Text(stringResource(R.string.notifications))
                 Switch(
                     checked = settings.notificationEnabled,
                     onCheckedChange = { viewModel.setNotificationEnabled(it) }
