@@ -15,4 +15,5 @@ interface SongRepository {
     suspend fun unlikeSong(songId: String)
     suspend fun getLikedSongs(): List<Song>
     suspend fun getRecentlyPlayed(): List<Song>
+    suspend fun getLocalMusic(): List<Song>
 }

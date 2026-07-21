@@ -126,4 +126,7 @@ class SongRepositoryImpl @Inject constructor(
     override suspend fun getRecentlyPlayed(): List<Song> {
         return MockData.songs.shuffled().take(10)
     }
+    override suspend fun getLocalMusic(): List<Song> {
+        return getLocalSongs() // This uses the existing private helper function
+    }
 }

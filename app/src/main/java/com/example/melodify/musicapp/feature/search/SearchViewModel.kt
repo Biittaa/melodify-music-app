@@ -23,7 +23,8 @@ import com.melodify.musicapp.domain.model.SearchFilter
 data class SearchUiState(
     val query: String = "",
     val history: List<SearchHistory> = emptyList(),
-    val selectedFilter: SearchFilter = SearchFilter.All
+    val selectedFilter: SearchFilter = SearchFilter.All,
+    val localSongs: List<Song> = emptyList() // <-- Add this line
 )
 
 @HiltViewModel
@@ -59,6 +60,15 @@ class SearchViewModel @Inject constructor(
 
     init {
         loadHistory()
+        loadLocalSongs() // <-- Add this line
+    }
+
+    // Add this new function:
+    private fun loadLocalSongs() {
+        viewModelScope.launch {
+            val songs = songRepository.getLocalMusic()
+            _uiState.update { it.copy(localSongs = songs) }
+        }
     }
 
     fun onQueryChange(query: String) {

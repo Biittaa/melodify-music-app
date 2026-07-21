@@ -64,11 +64,36 @@ fun SearchScreen(
         FilterChips(selectedFilter = uiState.selectedFilter, onFilterSelected = viewModel::onFilterChange)
 
         if (uiState.query.isEmpty()) {
-            SearchHistorySection(
-                history = uiState.history,
-                onHistoryClick = viewModel::onQueryChange,
-                onClearHistory = viewModel::clearHistory
-            )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                // 1. Show Search History
+                if (uiState.history.isNotEmpty()) {
+                    item {
+                        SearchHistorySection(
+                            history = uiState.history,
+                            onHistoryClick = viewModel::onQueryChange,
+                            onClearHistory = viewModel::clearHistory
+                        )
+                    }
+                }
+
+                // 2. Show Local Songs
+                if (uiState.localSongs.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "My Local Music",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                    items(uiState.localSongs) { song ->
+                        SearchResultItem(song = song, onClick = { onSongClick(song) })
+                    }
+                }
+            }
         } else {
             SearchResultsList(searchResults, onSongClick)
         }
@@ -129,16 +154,34 @@ fun FilterChips(selectedFilter: SearchFilter, onFilterSelected: (SearchFilter) -
 }
 
 @Composable
-fun SearchHistorySection(history: List<com.melodify.musicapp.domain.model.SearchHistory>, onHistoryClick: (String) -> Unit, onClearHistory: () -> Unit) {
+fun SearchHistorySection(
+    history: List<com.melodify.musicapp.domain.model.SearchHistory>,
+    onHistoryClick: (String) -> Unit,
+    onClearHistory: () -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(text = "Recent Searches", fontWeight = FontWeight.Bold)
             TextButton(onClick = onClearHistory) { Text(text = "Clear All") }
         }
-        LazyColumn {
-            items(history) { item ->
-                Row(modifier = Modifier.fillMaxWidth().clickable { onHistoryClick(item.keyword) }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.History, null, tint = Color.Gray); Spacer(Modifier.width(16.dp)); Text(item.keyword)
+
+        // Changed from LazyColumn to a regular Column with forEach
+        Column {
+            history.forEach { item ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onHistoryClick(item.keyword) }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.History, null, tint = Color.Gray)
+                    Spacer(Modifier.width(16.dp))
+                    Text(item.keyword)
                 }
             }
         }
