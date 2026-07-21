@@ -69,10 +69,11 @@ class SongRepositoryImpl @Inject constructor(
         return (filteredLocal + remote + mock).distinctBy { it.id }
     }
 
-    override fun searchSongsPaging(query: String): PagingSource<Int, Song> {
+    override fun searchSongsPaging(query: String, filter: SearchFilter): PagingSource<Int, Song> {
         return SongSearchPagingSource(
             songRepository = this,
-            query = query
+            query = query,
+            filter = filter
         )
     }
 

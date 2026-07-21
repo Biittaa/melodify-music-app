@@ -26,7 +26,19 @@ class SettingsViewModel @Inject constructor(
             _settings.value = settingsRepository.getSettings()
         }
     }
+    fun setFontScale(scale: Float) {
+        viewModelScope.launch {
+            settingsRepository.setFontScale(scale)
+            _settings.update { it.copy(fontScale = scale) }
+        }
+    }
 
+    fun setNotificationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setNotification(enabled)
+            _settings.update { it.copy(notificationEnabled = enabled) }
+        }
+    }
     fun toggleDarkMode(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.setDarkMode(enabled)

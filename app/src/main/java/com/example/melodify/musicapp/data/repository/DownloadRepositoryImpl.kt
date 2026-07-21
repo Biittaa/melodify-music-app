@@ -1,19 +1,18 @@
 package com.melodify.musicapp.data.repository
 
 import android.content.Context
-import androidx.work.Data
-import androidx.work.ListenableWorker
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.core.common.Result
+import com.melodify.musicapp.core.player.DownloadWorker
 import com.melodify.musicapp.data.local.dao.DownloadedSongDao
 import com.melodify.musicapp.data.local.entity.DownloadedSongEntity
 import com.melodify.musicapp.domain.model.Download
 import com.melodify.musicapp.domain.model.DownloadStatus
 import com.melodify.musicapp.domain.repository.DownloadRepository
 import com.melodify.musicapp.domain.repository.SettingsRepository
+import com.melodify.musicapp.domain.repository.SongRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -25,7 +24,9 @@ class DownloadRepositoryImpl @Inject constructor(
     private val workManager: WorkManager,
     private val downloadedSongDao: DownloadedSongDao,
     private val currentUserProvider: CurrentUserProvider,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val songRepository: SongRepository,   // <-- اضافه شد
+    @ApplicationContext private val context: Context
 ) : DownloadRepository {
 
     override suspend fun download(songId: String): Result<Unit> {
@@ -34,18 +35,38 @@ class DownloadRepositoryImpl @Inject constructor(
             return Result.Error(Exception("Premium subscription required for downloads"))
         }
 
-        val userId = currentUserProvider.getCurrentUser()?.id ?: return Result.Error(Exception("User not logged in"))
+        val userId = currentUserProvider.getCurrentUser()?.id
+            ?: return Result.Error(Exception("User not logged in"))
 
-        val workRequest = OneTimeWorkRequest.Builder(DownloadWorker::class.java)
+        // دریافت اطلاعات آهنگ برای دسترسی به audioUrl
+        val song = try {
+            songRepository.getSong(songId)
+        } catch (e: Exception) {
+            return Result.Error(Exception("Song not found"))
+        }
+
+        val workRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
             .setInputData(
-                Data.Builder()
-                    .putString("song_id", songId)
-                    .putString("user_id", userId)
+                workDataOf(
+                    "song_id" to songId,
+                    "audio_url" to song.audioUrl  // ارسال URL به Worker
+                )
+            )
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresStorageNotLow(true)
                     .build()
             )
             .addTag(songId)
             .build()
-        workManager.enqueue(workRequest)
+
+        workManager.enqueueUniqueWork(
+            "download_$songId",
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
+
         return Result.Success(Unit)
     }
 
@@ -54,7 +75,11 @@ class DownloadRepositoryImpl @Inject constructor(
     }
 
     override suspend fun delete(songId: String) {
+        // حذف از دیتابیس و فایل
         downloadedSongDao.delete(DownloadedSongEntity(songId, "", 0))
+        // حذف فایل فیزیکی (در صورت وجود)
+        val file = java.io.File(context.filesDir, "songs/$songId.mp3")
+        if (file.exists()) file.delete()
     }
 
     override suspend fun getDownloads(): List<Download> {
@@ -78,12 +103,5 @@ class DownloadRepositoryImpl @Inject constructor(
                 )
             }
         }
-    }
-}
-
-class DownloadWorker(appContext: Context, params: WorkerParameters) : androidx.work.CoroutineWorker(appContext, params) {
-    override suspend fun doWork(): Result {
-        // Implementation logic
-        return Result.success()
     }
 }

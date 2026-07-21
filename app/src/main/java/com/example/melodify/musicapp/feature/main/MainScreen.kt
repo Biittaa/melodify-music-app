@@ -25,7 +25,7 @@ import androidx.navigation.compose.*
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 
-// Domain models (Note standard com.melodify imports)
+// Domain models
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.Playlist
 
@@ -46,7 +46,8 @@ import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
 import com.example.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.player.PlayerViewModel
-import com.melodify.musicapp.feature.social.SocialScreen
+import com.melodify.musicapp.feature.artist.ArtistScreen
+import com.melodify.musicapp.feature.recent.RecentSongsScreen   // <-- صفحه جدید
 
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
     object Home : Screen("home", R.string.home, Icons.Default.Home)
@@ -60,7 +61,8 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object Register : Screen("register")
     object PlaylistDetail : Screen("playlist_detail/{playlistId}")
     object LikedSongs : Screen("liked_songs", R.string.liked_songs)
-    object Social : Screen("social", R.string.top_artists, Icons.Default.People)
+    object Artists : Screen("artists", R.string.top_artists, Icons.Default.Person)  // <-- تغییر نام به Artists
+    object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History) // <-- جدید
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -185,8 +187,9 @@ fun MainScreen(
                         onQuickActionClick = { action: String ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
+                                "recent" -> navController.navigate(Screen.RecentSongs.route) // <-- تغییر
                                 "playlists" -> navController.navigate(Screen.Playlists.route)
-                                "artists" -> navController.navigate(Screen.Social.route)
+                                "artists" -> navController.navigate(Screen.Artists.route)   // <-- تغییر
                             }
                         }
                     )
@@ -249,8 +252,24 @@ fun MainScreen(
                         }
                     )
                 }
-                composable(Screen.Social.route) {
-                    SocialScreen(onBackClick = { navController.popBackStack() })
+                // صفحه هنرمندان (جایگزین SocialScreen)
+                composable(Screen.Artists.route) {
+                    ArtistScreen(
+                        onArtistClick = { artist ->
+                            // می‌توانید به صفحه آهنگ‌های آن هنرمند بروید
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                // صفحه اخیراً شنیده شده
+                composable(Screen.RecentSongs.route) {
+                    RecentSongsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSongClick = { song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        }
+                    )
                 }
             }
         }

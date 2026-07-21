@@ -41,7 +41,7 @@ fun SettingsScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-            // Theme Setting
+            // Theme
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -56,11 +56,10 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Language Setting
+            // Language
             Column {
                 Text(text = stringResource(R.string.language), style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
-                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = settings.language == "fa",
@@ -68,7 +67,6 @@ fun SettingsScreen(
                     )
                     Text(text = "فارسی (RTL)", modifier = Modifier.padding(start = 8.dp))
                 }
-                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = settings.language == "en",
@@ -78,8 +76,37 @@ fun SettingsScreen(
                 }
             }
 
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Font Scale
+            Column {
+                Text(text = "اندازه فونت", style = MaterialTheme.typography.labelLarge)
+                Slider(
+                    value = settings.fontScale,
+                    onValueChange = { viewModel.setFontScale(it) },
+                    valueRange = 0.8f..1.5f,
+                    steps = 7
+                )
+                Text(text = "مقدار: ${settings.fontScale}", style = MaterialTheme.typography.bodySmall)
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Notifications
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "اعلان‌ها")
+                Switch(
+                    checked = settings.notificationEnabled,
+                    onCheckedChange = { viewModel.setNotificationEnabled(it) }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // App Info
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
                 Text(

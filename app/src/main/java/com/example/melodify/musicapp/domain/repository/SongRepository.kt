@@ -8,7 +8,8 @@ interface SongRepository {
     suspend fun getLatestSongs(): List<Song>
     suspend fun getSong(songId: String): Song
     suspend fun searchSongs(query: String): List<Song>
-    fun searchSongsPaging(query: String): PagingSource<Int, Song>
+    // اضافه کردن پارامتر filter
+    fun searchSongsPaging(query: String, filter: SearchFilter = SearchFilter.All): PagingSource<Int, Song>
     suspend fun likeSong(songId: String)
     suspend fun unlikeSong(songId: String)
     suspend fun getLikedSongs(): List<Song>

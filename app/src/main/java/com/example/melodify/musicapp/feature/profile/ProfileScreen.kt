@@ -24,8 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.R
 import com.melodify.musicapp.ui.theme.PremiumGold
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +58,26 @@ fun ProfileScreen(
             }
         )
     }
+    // فقط بخش تغییر یافته را نمایش می‌دهیم (در جای مناسب)
 
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = user?.fullName ?: "Guest User",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        if (uiState.isPremium) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Premium",
+                tint = PremiumGold,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        IconButton(onClick = { showEditDialog = true }) {
+            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(20.dp))
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(

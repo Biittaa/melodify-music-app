@@ -37,21 +37,26 @@ class SearchViewModel @Inject constructor(
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
+    private val _selectedFilter = MutableStateFlow(SearchFilter.All)
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val searchResults: Flow<PagingData<Song>> = _searchQuery
-        .debounce(500L)
-        .distinctUntilChanged()
-        .flatMapLatest { query ->
-            if (query.isBlank()) {
-                flowOf(PagingData.empty())
-            } else {
-                Pager(
-                    config = PagingConfig(pageSize = 20, enablePlaceholders = false),
-                    pagingSourceFactory = { songRepository.searchSongsPaging(query) }
-                ).flow.cachedIn(viewModelScope)
-            }
+    val searchResults: Flow<PagingData<Song>> = combine(
+        _searchQuery.debounce(500L).distinctUntilChanged(),
+        _selectedFilter.distinctUntilChanged()
+    ) { query, filter ->
+        query to filter
+    }.flatMapLatest { (query, filter) ->
+        if (query.isBlank()) {
+            flowOf(PagingData.empty())
+        } else {
+            Pager(
+                config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+                pagingSourceFactory = {
+                    songRepository.searchSongsPaging(query, filter) // <-- ارسال فیلتر
+                }
+            ).flow.cachedIn(viewModelScope)
         }
+    }
 
     init {
         loadHistory()
@@ -66,8 +71,8 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onFilterChange(filter: SearchFilter) {
+        _selectedFilter.value = filter
         _uiState.update { it.copy(selectedFilter = filter) }
-        // Note: In a complete implementation, PagingSource would also filter by type
     }
 
     private fun loadHistory() {

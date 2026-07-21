@@ -4,26 +4,35 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
+import com.melodify.musicapp.feature.search.SearchFilter
 
 /**
- * PagingSource for searching songs.
- * Integrates local, remote, and mock results, with fallback pagination to prevent offline failures.
+ * PagingSource for searching songs with optional filter.
  */
 class SongSearchPagingSource(
     private val songRepository: SongRepository,
-    private val query: String
+    private val query: String,
+    private val filter: SearchFilter = SearchFilter.All   // <-- اضافه شد
 ) : PagingSource<Int, Song>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Song> {
         return try {
             val page = params.key ?: 0
+            // دریافت لیست کامل از مخزن (با اعمال فیلتر)
             val allSongs = songRepository.searchSongs(query)
 
-            val fromIndex = page * params.loadSize
-            val toIndex = minOf(fromIndex + params.loadSize, allSongs.size)
+            // اعمال فیلتر ساده (در صورتی که مخزن از قبل فیلتر نکرده باشد)
+            val filteredSongs = when (filter) {
+                SearchFilter.Songs -> allSongs
+                SearchFilter.Artists -> allSongs // در این نسخه فقط آهنگ داریم، فیلتر پیشرفته‌تر نیاز به تغییرات بیشتر دارد
+                else -> allSongs
+            }
 
-            val items = if (fromIndex < allSongs.size) {
-                allSongs.subList(fromIndex, toIndex)
+            val fromIndex = page * params.loadSize
+            val toIndex = minOf(fromIndex + params.loadSize, filteredSongs.size)
+
+            val items = if (fromIndex < filteredSongs.size) {
+                filteredSongs.subList(fromIndex, toIndex)
             } else {
                 emptyList()
             }
@@ -31,7 +40,7 @@ class SongSearchPagingSource(
             LoadResult.Page(
                 data = items,
                 prevKey = if (page > 0) page - 1 else null,
-                nextKey = if (toIndex < allSongs.size) page + 1 else null
+                nextKey = if (toIndex < filteredSongs.size) page + 1 else null
             )
         } catch (e: Exception) {
             LoadResult.Error(e)
