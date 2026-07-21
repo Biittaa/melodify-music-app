@@ -6,7 +6,6 @@ import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Album
 import com.melodify.musicapp.domain.model.Artist
 import com.melodify.musicapp.domain.model.SearchHistory
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.SearchRepository
 import kotlinx.coroutines.flow.firstOrNull

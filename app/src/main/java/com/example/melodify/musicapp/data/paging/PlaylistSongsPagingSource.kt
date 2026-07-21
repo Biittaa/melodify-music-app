@@ -4,7 +4,6 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.melodify.musicapp.data.local.dao.PlaylistSongDao
 import com.melodify.musicapp.data.local.entity.PlaylistSongEntity
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * PagingSource for getting songs of a specific playlist from Room database

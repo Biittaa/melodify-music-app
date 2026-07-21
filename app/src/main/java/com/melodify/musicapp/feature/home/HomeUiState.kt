@@ -1,6 +1,5 @@
 package com.melodify.musicapp.feature.home
 
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.Playlist
 import com.melodify.musicapp.domain.model.Artist
 

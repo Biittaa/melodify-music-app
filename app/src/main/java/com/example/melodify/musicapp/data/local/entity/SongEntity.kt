@@ -2,7 +2,6 @@ package com.melodify.musicapp.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.melodify.musicapp.domain.model.Song
 
 @Entity(tableName = "songs")
 data class SongEntity(

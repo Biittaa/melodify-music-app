@@ -2,10 +2,6 @@ package com.melodify.musicapp.feature.downloads
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-<<<<<<< Updated upstream
-import com.melodify.musicapp.domain.repository.DownloadRepository
-=======
->>>>>>> Stashed changes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

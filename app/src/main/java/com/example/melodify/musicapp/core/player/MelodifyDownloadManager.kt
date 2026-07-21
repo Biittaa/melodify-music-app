@@ -2,7 +2,6 @@ package com.melodify.musicapp.core.player
 
 import android.content.Context
 import androidx.work.*
-import com.melodify.musicapp.domain.model.Song
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject

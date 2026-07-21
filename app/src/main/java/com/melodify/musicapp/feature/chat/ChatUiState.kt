@@ -2,7 +2,6 @@ package com.melodify.musicapp.feature.chat
 
 import com.melodify.musicapp.domain.model.Message
 import com.melodify.musicapp.domain.model.User
-import com.melodify.musicapp.domain.model.Song
 
 data class ChatUiState(
     val isLoading: Boolean = false,

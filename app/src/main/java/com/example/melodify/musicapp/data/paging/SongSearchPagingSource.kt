@@ -6,7 +6,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.melodify.musicapp.core.common.Constants
-import com.melodify.musicapp.domain.model.Song
 import kotlinx.coroutines.tasks.await
 
 /**

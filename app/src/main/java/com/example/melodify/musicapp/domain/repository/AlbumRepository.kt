@@ -1,7 +1,6 @@
 package com.melodify.musicapp.domain.repository
 
 import com.melodify.musicapp.domain.model.Album
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * Repository interface for album management

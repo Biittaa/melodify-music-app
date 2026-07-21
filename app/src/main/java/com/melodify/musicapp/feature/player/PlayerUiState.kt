@@ -1,7 +1,5 @@
 package com.melodify.musicapp.feature.player
 
-import com.melodify.musicapp.domain.model.Song
-
 data class PlayerUiState(
     val isLoading: Boolean = false,
     val currentSong: Song? = null,

@@ -7,7 +7,6 @@ import com.google.firebase.firestore.ktx.toObject
 import com.melodify.musicapp.core.common.Constants
 import com.melodify.musicapp.domain.model.Message
 import com.melodify.musicapp.domain.model.Playlist
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

@@ -19,7 +19,6 @@ import coil.request.ImageRequest
 import com.melodify.musicapp.core.ui.theme.MelodifyColors
 import com.melodify.musicapp.core.ui.theme.Space12
 import com.melodify.musicapp.core.ui.theme.Space8
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.R
 
 @Composable

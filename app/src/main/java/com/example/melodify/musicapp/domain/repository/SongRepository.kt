@@ -2,7 +2,6 @@ package com.melodify.musicapp.domain.repository
 
 import androidx.paging.PagingSource
 import com.google.firebase.firestore.DocumentSnapshot
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * Repository interface for song management

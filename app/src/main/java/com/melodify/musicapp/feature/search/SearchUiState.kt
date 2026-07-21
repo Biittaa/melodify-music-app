@@ -1,6 +1,5 @@
 package com.melodify.musicapp.feature.search
 
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.model.Artist
 import com.melodify.musicapp.domain.model.Album
 import com.melodify.musicapp.domain.model.SearchHistory

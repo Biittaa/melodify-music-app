@@ -3,7 +3,6 @@ package com.melodify.musicapp.domain.repository
 import androidx.paging.PagingSource
 import com.melodify.musicapp.data.local.entity.PlaylistSongEntity
 import com.melodify.musicapp.domain.model.Playlist
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * Repository interface for playlist management

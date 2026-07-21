@@ -2,7 +2,6 @@ package com.melodify.musicapp.data.repository
 
 import com.melodify.musicapp.core.player.IPlayerController
 import com.melodify.musicapp.domain.model.PlayerState
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

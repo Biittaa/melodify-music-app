@@ -1,7 +1,6 @@
 package com.melodify.musicapp.core.player
 
 import com.melodify.musicapp.domain.model.PlayerState
-import com.melodify.musicapp.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 interface IPlayerController {
