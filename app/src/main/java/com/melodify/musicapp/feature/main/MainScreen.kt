@@ -1,1 +1,1 @@
-// This file is empty to avoid redeclaration with the one in com.example.melodify.musicapp
+// Empty file to resolve conflict with the primary file in com.example.melodify.musicapp package.

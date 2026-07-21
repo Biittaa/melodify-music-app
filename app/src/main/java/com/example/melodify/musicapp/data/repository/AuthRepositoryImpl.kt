@@ -1,5 +1,6 @@
 package com.melodify.musicapp.data.repository
 
+import android.util.Log
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.core.common.Result
 import com.melodify.musicapp.data.remote.auth.FirebaseAuthDataSource
@@ -10,11 +11,6 @@ import com.melodify.musicapp.domain.repository.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of AuthRepository
- * Combines Firebase Authentication with local user cache
- * Manages real-time chat sync lifecycle based on login/logout
- */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authDataSource: FirebaseAuthDataSource,
@@ -27,26 +23,36 @@ class AuthRepositoryImpl @Inject constructor(
         return authDataSource.login(email, password).also { result ->
             if (result is Result.Success) {
                 currentUserProvider.setUser(result.data)
-                // Start real-time chat sync after successful login
                 chatSyncService.startListening()
             }
         }
     }
 
     override suspend fun register(username: String, email: String, password: String): Result<User> {
-        return authDataSource.register(username, email, password).also { result ->
-            if (result is Result.Success) {
-                // Save user to Firestore and update cache
-                firestoreDataSource.createUser(result.data)
-                currentUserProvider.setUser(result.data)
-                // Start real-time chat sync after successful registration
-                chatSyncService.startListening()
-            }
+        // 1. Attempt authentication
+        val authResult = authDataSource.register(username, email, password)
+        if (authResult is Result.Error) {
+            return authResult // the error message is already user‑friendly
+        }
+
+        val user = (authResult as Result.Success).data
+
+        // 2. Save user to Firestore
+        return try {
+            firestoreDataSource.createUser(user)
+            // success: update local cache and start chat sync
+            currentUserProvider.setUser(user)
+            chatSyncService.startListening()
+            Result.Success(user)
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Firestore save failed", e)
+            // Provide a clear message; the user is still created in Auth,
+            // but profile data couldn't be saved – they can retry later.
+            Result.Error(Exception("Account created, but profile data couldn't be saved. Please try again later."))
         }
     }
 
     override suspend fun logout() {
-        // Stop chat sync before logging out
         chatSyncService.stopListening()
         authDataSource.logout()
         currentUserProvider.clear()
@@ -54,7 +60,6 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentUser(): User? {
         return currentUserProvider.getCurrentUser() ?: authDataSource.getCurrentUser()?.also {
-            // If user is present in Firebase but not in cache, set it and start sync
             currentUserProvider.setUser(it)
             chatSyncService.startListening()
         }

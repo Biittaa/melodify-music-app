@@ -2,19 +2,28 @@ package com.melodify.musicapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Global Red Theme
-val Red80 = Color(0xFFFFB4AB)
-val RedGrey80 = Color(0xFFD8C2BF)
-val Red40 = Color(0xFFBA1A1A)
-val RedGrey40 = Color(0xFF93000A)
+// Melodify Red Theme
+val RedPrimary = Color(0xFFD32F2F)
+val RedDark = Color(0xFF9A0007)
+val RedLight = Color(0xFFFF6659)
 
-val PrimaryLight = Color(0xFFD32F2F)
-val PrimaryVariantLight = Color(0xFFB71C1C)
-val SecondaryLight = Color(0xFFF44336)
+val PrimaryLight = RedPrimary
+val PrimaryVariantLight = RedDark
+val SecondaryLight = RedLight
 
-val PrimaryDark = Color(0xFFFF8A80)
-val PrimaryVariantDark = Color(0xFFD32F2F)
-val SecondaryDark = Color(0xFFFF5252)
+val PrimaryDark = RedPrimary
+val PrimaryVariantDark = RedDark
+val SecondaryDark = RedLight
+
+val BackgroundDark = Color(0xFF121212)
+val SurfaceDark = Color(0xFF1E1E1E)
 
 val PremiumGold = Color(0xFFFFD700)
-val ShimmerBase = Color(0xFFE0E0E0)
+val ShimmerBase = Color(0xFF424242)
+
+val White = Color(0xFFFFFFFF)
+val Black = Color(0xFF000000)
+val Gray = Color(0xFF9E9E9E)
+
+val Pink80 = Color(0xFFEFB8C8)
+val Pink40 = Color(0xFF7D5260)

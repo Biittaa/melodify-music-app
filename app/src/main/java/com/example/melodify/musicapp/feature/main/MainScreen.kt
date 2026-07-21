@@ -61,7 +61,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
     val bottomNavItems = listOf(Screen.Home, Screen.Search, Screen.Downloads, Screen.Playlists, Screen.Profile)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    
+
     val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
 
@@ -80,10 +80,10 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 val currentRoute = currentDestination?.route ?: ""
                 val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
                 val isMainTab = bottomNavItems.any { it.route == currentRoute }
-                
+
                 if (isMainTab) {
                     CenterAlignedTopAppBar(
-                        title = { Text("Melodify", fontWeight = FontWeight.ExtraBold) },
+                        title = { Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary) },
                         navigationIcon = {
                             IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
                                 Icon(Icons.Default.Settings, contentDescription = null)
@@ -100,7 +100,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
             bottomBar = {
                 val currentRoute = currentDestination?.route ?: ""
                 val isAuthScreen = currentRoute == Screen.Login.route || currentRoute == Screen.Register.route
-                if (!isAuthScreen) {
+                if (!isAuthScreen && profileUiState.user != null) {
                     Column {
                         MiniPlayer(onClick = { showNowPlaying = true })
                         NavigationBar {
@@ -142,7 +142,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                         onNavigateToLogin = { navController.navigate(Screen.Login.route) }
                     )
                 }
-                composable(Screen.Home.route) { 
+                composable(Screen.Home.route) {
                     HomeScreen(
                         onSongClick = { showNowPlaying = true },
                         onQuickActionClick = { action ->
@@ -152,29 +152,29 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                                 "artists" -> navController.navigate(Screen.Social.route)
                             }
                         }
-                    ) 
+                    )
                 }
                 composable(Screen.Search.route) { SearchScreen(onSongClick = { showNowPlaying = true }) }
                 composable(Screen.Downloads.route) { DownloadsScreen(onSongClick = { showNowPlaying = true }) }
-                composable(Screen.Playlists.route) { 
-                    PlaylistsScreen(onPlaylistClick = { playlist -> 
+                composable(Screen.Playlists.route) {
+                    PlaylistsScreen(onPlaylistClick = { playlist ->
                         navController.navigate("playlist_detail/${playlist.id}")
-                    }) 
+                    })
                 }
-                composable(Screen.Profile.route) { 
+                composable(Screen.Profile.route) {
                     ProfileScreen(
                         onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                        onLogoutClick = { 
+                        onLogoutClick = {
                             profileViewModel.logout()
                         }
-                    ) 
+                    )
                 }
                 composable(Screen.Settings.route) { SettingsScreen(onBackClick = { navController.popBackStack() }) }
-                composable(Screen.ChatList.route) { 
+                composable(Screen.ChatList.route) {
                     ConversationsScreen(
                         onBackClick = { navController.popBackStack() },
                         onConversationClick = { userId -> navController.navigate("chat_detail/$userId") }
-                    ) 
+                    )
                 }
                 composable("chat_detail/{userId}") { backStackEntry ->
                     val userId = backStackEntry.arguments?.getString("userId") ?: ""
@@ -193,10 +193,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                     )
                 }
                 composable(Screen.LikedSongs.route) {
-                    LikedSongsScreen(
-                        onBackClick = { navController.popBackStack() },
-                        onSongClick = { showNowPlaying = true }
-                    )
+                    LikedSongsScreen(onBackClick = { navController.popBackStack() }, onSongClick = { showNowPlaying = true })
                 }
                 composable(Screen.Social.route) {
                     SocialScreen(onBackClick = { navController.popBackStack() })
