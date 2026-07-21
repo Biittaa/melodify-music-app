@@ -2,7 +2,6 @@ package com.melodify.musicapp.data.repository
 
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Album
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.AlbumRepository
 import javax.inject.Inject
 import javax.inject.Singleton

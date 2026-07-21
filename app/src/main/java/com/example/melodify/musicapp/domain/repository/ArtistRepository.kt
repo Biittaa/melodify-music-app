@@ -1,7 +1,6 @@
 package com.melodify.musicapp.domain.repository
 
 import com.melodify.musicapp.domain.model.Artist
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * Repository interface for artist management

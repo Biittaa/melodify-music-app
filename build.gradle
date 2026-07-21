@@ -1,0 +1,70 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext {
+        // Kotlin & Compose
+        kotlin_version = '1.9.24'
+        compose_version = '2024.06.00'   // BOM version (date-based)
+        compose_compiler_version = '1.5.14'  // must match Kotlin 1.9.24
+
+        // AndroidX
+        core_ktx_version = '1.13.1'
+        lifecycle_version = '2.8.2'
+        activity_compose_version = '1.9.2'
+
+        // Hilt
+        hilt_version = '2.51.1'
+
+        // Firebase
+        firebase_bom_version = '33.0.0'
+
+        // Room
+        room_version = '2.6.1'
+
+        // DataStore
+        datastore_version = '1.1.0'
+
+        // Paging
+        paging_version = '3.3.0'
+
+        // ExoPlayer
+        exoplayer_version = '2.19.1'   // still fine
+
+        // WorkManager
+        work_version = '2.9.0'
+
+        // Coroutines
+        coroutines_version = '1.8.1'
+
+        // Navigation Compose
+        navigation_compose_version = '2.7.7'
+
+        // Coil
+        coil_version = '2.7.0'
+
+        // Accompanist
+        accompanist_version = '0.34.0'
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.devneeds.ir")
+        }
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.4.2"               // latest stable
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24"   // or 2.0.0
+        classpath "com.google.dagger:hilt-android-gradle-plugin:2.51.1"
+        classpath "com.google.gms:google-services:4.4.2"               // critical fix             // critical fix
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+
+
+tasks.register('clean', Delete) {
+    delete rootProject.buildDir
+}

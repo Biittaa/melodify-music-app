@@ -1,7 +1,6 @@
 package com.melodify.musicapp.core.player
 
 import com.melodify.musicapp.domain.model.PlayerState
-import com.melodify.musicapp.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 interface IPlayerController {
@@ -14,5 +13,6 @@ interface IPlayerController {
     fun setSpeed(speed: Float)
     fun toggleShuffle()
     fun setRepeatMode(mode: Int)
+    fun setSleepTimer(minutes: Int)
     fun getPlayerState(): Flow<PlayerState>
 }

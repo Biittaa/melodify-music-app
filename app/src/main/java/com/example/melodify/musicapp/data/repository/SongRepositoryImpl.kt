@@ -7,7 +7,6 @@ import com.melodify.musicapp.data.local.dao.LikedSongDao
 import com.melodify.musicapp.data.local.entity.LikedSongEntity
 import com.melodify.musicapp.data.paging.SongSearchPagingSource
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -40,7 +39,7 @@ class SongRepositoryImpl @Inject constructor(
         return firestoreDataSource.searchSongs(query)
     }
 
-    override fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot?, Song> {
+    override fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot, Song> {
         return SongSearchPagingSource(
             firestore = firestoreDataSource.firestore,
             query = query

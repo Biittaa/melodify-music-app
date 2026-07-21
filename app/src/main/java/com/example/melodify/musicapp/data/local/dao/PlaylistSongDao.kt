@@ -1,11 +1,14 @@
 package com.melodify.musicapp.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.melodify.musicapp.data.local.entity.PlaylistSongEntity
+import com.melodify.musicapp.data.local.model.SongWithPlaylistInfo
 
 /**
  * Data Access Object for Playlist-Song relationships
@@ -43,17 +46,13 @@ interface PlaylistSongDao {
      * Get paginated songs for a specific playlist (for Paging3)
      * Uses OFFSET and LIMIT for numeric pagination
      */
+    @Transaction
     @Query("""
-        SELECT * FROM playlist_songs 
-        WHERE playlistId = :playlistId 
-        ORDER BY addedAt DESC 
-        LIMIT :limit OFFSET :offset
-    """)
-    suspend fun getPlaylistSongsPaged(
-        playlistId: String,
-        limit: Int,
-        offset: Int
-    ): List<PlaylistSongEntity>
+    SELECT * FROM playlist_songs 
+    WHERE playlistId = :playlistId 
+    ORDER BY addedAt DESC
+""")
+    fun getPlaylistSongsPaged(playlistId: String): PagingSource<Int, SongWithPlaylistInfo>
 
     /**
      * Delete all songs from a specific playlist (useful for clearing)

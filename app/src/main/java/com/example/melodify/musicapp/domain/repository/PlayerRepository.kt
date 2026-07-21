@@ -1,7 +1,6 @@
 package com.melodify.musicapp.domain.repository
 
 import com.melodify.musicapp.domain.model.PlayerState
-import com.melodify.musicapp.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 /**

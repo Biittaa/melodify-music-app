@@ -7,7 +7,6 @@ import com.melodify.musicapp.data.local.entity.PlaylistSongEntity
 import com.melodify.musicapp.data.paging.PlaylistSongsPagingSource
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Playlist
-import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.PlaylistRepository
 import java.util.UUID
 import javax.inject.Inject

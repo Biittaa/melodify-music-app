@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.melodify.musicapp.core.common.Constants
 import com.melodify.musicapp.domain.model.Settings
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,20 +25,20 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 class SettingsDataStore @Inject constructor(
     private val context: Context
 ) {
-    // -------- کلیدهای Preferences --------
+    // -------- Preferences Keys --------
     companion object {
         private val DARK_MODE_KEY = booleanPreferencesKey(Constants.PREF_DARK_MODE)
         private val LANGUAGE_KEY = stringPreferencesKey(Constants.PREF_LANGUAGE)
         private val FONT_SCALE_KEY = floatPreferencesKey(Constants.PREF_FONT_SCALE)
         private val NOTIFICATION_ENABLED_KEY = booleanPreferencesKey(Constants.PREF_NOTIFICATION_ENABLED)
-        private val USER_PREMIUM_KEY = booleanPreferencesKey("user_premium") // اضافی برای کش پریمیوم
+        private val USER_PREMIUM_KEY = booleanPreferencesKey("user_premium")
     }
 
     val settingsFlow: Flow<Settings> = context.dataStore.data
         .map { preferences ->
             Settings(
                 darkMode = preferences[DARK_MODE_KEY] ?: false,
-                language = preferences[LANGUAGE_KEY] ?: "fa", // پیش‌فرض فارسی
+                language = preferences[LANGUAGE_KEY] ?: "fa",
                 fontScale = preferences[FONT_SCALE_KEY] ?: 1.0f,
                 notificationEnabled = preferences[NOTIFICATION_ENABLED_KEY] ?: true
             )
@@ -71,7 +72,7 @@ class SettingsDataStore @Inject constructor(
         }
     }
 
-    // -------- optional funcs for Premium --------
+    // -------- Premium status --------
     val premiumFlow: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[USER_PREMIUM_KEY] ?: false

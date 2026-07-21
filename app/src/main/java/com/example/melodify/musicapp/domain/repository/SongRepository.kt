@@ -2,7 +2,6 @@ package com.melodify.musicapp.domain.repository
 
 import androidx.paging.PagingSource
 import com.google.firebase.firestore.DocumentSnapshot
-import com.melodify.musicapp.domain.model.Song
 
 /**
  * Repository interface for song management
@@ -42,7 +41,7 @@ interface SongRepository {
      * @param query Search keyword(s)
      * @return PagingSource for handling pagination
      */
-    fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot?, Song>
+    fun searchSongsPaging(query: String): PagingSource<DocumentSnapshot, Song>
 
     /**
      * Like a song
