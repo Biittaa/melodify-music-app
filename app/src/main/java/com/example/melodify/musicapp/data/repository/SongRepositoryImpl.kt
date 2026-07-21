@@ -6,18 +6,16 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Standardized Core Interface & Model Imports
+// Standard Namespace Imports
+import com.melodify.musicapp.core.common.CurrentUserProvider
+import com.melodify.musicapp.core.common.MockData
+import com.melodify.musicapp.core.common.LocalMusicScanner
+import com.melodify.musicapp.data.local.dao.LikedSongDao
+import com.melodify.musicapp.data.local.entity.LikedSongEntity
+import com.melodify.musicapp.data.paging.SongSearchPagingSource
+import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
-
-// Resolved Physical Folder Dependency Imports
-import com.example.melodify.musicapp.core.common.CurrentUserProvider
-import com.example.melodify.musicapp.core.common.MockData
-import com.example.melodify.musicapp.core.common.LocalMusicScanner
-import com.example.melodify.musicapp.data.local.dao.LikedSongDao
-import com.example.melodify.musicapp.data.local.entity.LikedSongEntity
-import com.example.melodify.musicapp.data.paging.SongSearchPagingSource
-import com.example.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 
 @Singleton
 class SongRepositoryImpl @Inject constructor(

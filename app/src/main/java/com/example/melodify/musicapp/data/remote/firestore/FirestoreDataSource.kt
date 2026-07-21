@@ -4,17 +4,19 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
-import com.melodify.musicapp.core.common.Constants
-import com.melodify.musicapp.domain.model.Message
-import com.melodify.musicapp.domain.model.Playlist
-import com.melodify.musicapp.domain.model.Song
-import com.melodify.musicapp.domain.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+
+// Standard Namespace Imports
+import com.melodify.musicapp.core.common.Constants
+import com.melodify.musicapp.domain.model.Message
+import com.melodify.musicapp.domain.model.Playlist
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.User
 
 @Singleton
 class FirestoreDataSource @Inject constructor(
@@ -217,7 +219,7 @@ class FirestoreDataSource @Inject constructor(
         return songIds.mapNotNull { getSong(it) }
     }
 
-    // ==================== Messages & Social Direct Message ====================
+    // ==================== Messages (Real-time Chat) ====================
 
     suspend fun sendMessage(message: Message) {
         val messageWithParticipants = message.copy(

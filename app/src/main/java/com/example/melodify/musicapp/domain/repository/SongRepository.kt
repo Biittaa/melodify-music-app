@@ -1,4 +1,4 @@
-package com.melodify.musicapp.domain.repository // Change package name to this
+package com.melodify.musicapp.domain.repository // Unified Package
 
 import androidx.paging.PagingSource
 import com.google.firebase.firestore.DocumentSnapshot

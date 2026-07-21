@@ -1,13 +1,14 @@
-package com.example.melodify.musicapp.feature.home
+package com.melodify.musicapp.feature.home // Unified Package
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.melodify.musicapp.domain.model.Song
-import com.example.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.repository.SongRepository
 
 data class HomeUiState(
     val isLoading: Boolean = false,

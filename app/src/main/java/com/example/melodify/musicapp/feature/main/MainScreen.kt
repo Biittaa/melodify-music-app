@@ -1,5 +1,5 @@
-@file:JvmName("MainScreenKt") // Forces exact case matching for stubs on Windows
-package com.melodify.musicapp.feature.main
+@file:JvmName("MainScreenKt")
+package com.melodify.musicapp.feature.main // Unified Package
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
@@ -24,9 +24,15 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
+
+// Domain models
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.Playlist
+
+// Feature screens
 import com.melodify.musicapp.feature.auth.LoginScreen
 import com.melodify.musicapp.feature.auth.RegisterScreen
-import com.example.melodify.musicapp.feature.home.HomeScreen
+import com.melodify.musicapp.feature.home.HomeScreen
 import com.melodify.musicapp.feature.search.SearchScreen
 import com.melodify.musicapp.feature.downloads.DownloadsScreen
 import com.melodify.musicapp.feature.playlists.PlaylistsScreen
@@ -40,8 +46,7 @@ import com.melodify.musicapp.feature.chat.ChatScreen
 import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
 import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.social.SocialScreen
-import com.melodify.musicapp.domain.model.Song
-import com.melodify.musicapp.domain.model.Playlist
+
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
     object Home : Screen("home", R.string.home, Icons.Default.Home)
     object Search : Screen("search", R.string.search, Icons.Default.Search)
@@ -169,7 +174,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                 }
                 composable(Screen.Home.route) {
                     HomeScreen(
-                        onSongClick = { showNowPlaying = true },
+                        onSongClick = { _: Song -> showNowPlaying = true },
                         onQuickActionClick = { action: String ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
@@ -179,8 +184,8 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                         }
                     )
                 }
-                composable(Screen.Search.route) { SearchScreen(onSongClick = { showNowPlaying = true }) }
-                composable(Screen.Downloads.route) { DownloadsScreen(onSongClick = { showNowPlaying = true }) }
+                composable(Screen.Search.route) { SearchScreen(onSongClick = { _: Song -> showNowPlaying = true }) }
+                composable(Screen.Downloads.route) { DownloadsScreen(onSongClick = { _: Song -> showNowPlaying = true }) }
                 composable(Screen.Playlists.route) {
                     PlaylistsScreen(onPlaylistClick = { playlist ->
                         navController.navigate("playlist_detail/${playlist.id}")
@@ -204,7 +209,7 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                     ChatScreen(
                         otherUserId = userId,
                         onBackClick = { navController.popBackStack() },
-                        onSongClick = { showNowPlaying = true }
+                        onSongClick = { _: String -> showNowPlaying = true }
                     )
                 }
                 composable(Screen.PlaylistDetail.route) { backStackEntry ->
@@ -212,11 +217,11 @@ fun MainScreen(profileViewModel: ProfileViewModel = hiltViewModel()) {
                     PlaylistDetailScreen(
                         playlistId = playlistId,
                         onBackClick = { navController.popBackStack() },
-                        onSongClick = { showNowPlaying = true }
+                        onSongClick = { _: Song -> showNowPlaying = true }
                     )
                 }
                 composable(Screen.LikedSongs.route) {
-                    LikedSongsScreen(onBackClick = { navController.popBackStack() }, onSongClick = { showNowPlaying = true })
+                    LikedSongsScreen(onBackClick = { navController.popBackStack() }, onSongClick = { _: Song -> showNowPlaying = true })
                 }
                 composable(Screen.Social.route) {
                     SocialScreen(onBackClick = { navController.popBackStack() })

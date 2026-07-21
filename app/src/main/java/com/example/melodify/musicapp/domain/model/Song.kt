@@ -1,4 +1,4 @@
-package com.melodify.musicapp.domain.model // Change package name to this
+package com.melodify.musicapp.domain.model // Unified Package
 
 data class Song(
     val id: String,

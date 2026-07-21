@@ -1,4 +1,4 @@
-package com.example.melodify.musicapp.feature.home
+package com.melodify.musicapp.feature.home // Unified Package
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
-import com.example.melodify.musicapp.domain.model.Song
-import com.example.melodify.musicapp.ui.components.shimmerEffect
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.ui.components.shimmerEffect
 
 @Composable
 fun HomeScreen(
