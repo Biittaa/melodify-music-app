@@ -1,6 +1,7 @@
 package com.melodify.musicapp.core.player
 
 import android.content.Context
+import android.content.Intent
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -18,7 +19,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.content.Intent
+
 @Singleton
 class PlayerControllerImpl @Inject constructor(
     private val exoPlayer: ExoPlayer,
@@ -27,7 +28,8 @@ class PlayerControllerImpl @Inject constructor(
 ) : IPlayerController, Player.Listener {
 
     private val _playerState = MutableStateFlow(PlayerState(null, false, 0L, 0L, 0, false, 1f))
-    private var currentSong: Song? = null
+    private var currentPlaylist: List<Song> = emptyList()
+    
     private var progressJob: Job? = null
     private var sleepTimerJob: Job? = null
 
@@ -36,20 +38,31 @@ class PlayerControllerImpl @Inject constructor(
     }
 
     override fun play(song: Song) {
-        // Start the service so playback doesn't die in the background
+        playPlaylist(listOf(song), 0)
+    }
+
+    override fun playPlaylist(songs: List<Song>, startIndex: Int) {
+        currentPlaylist = songs
+        
         val intent = Intent(context, PlaybackService::class.java)
         context.startService(intent)
 
-        if (currentSong?.id != song.id) {
-            currentSong = song
+        val mediaItems = songs.map { song ->
             val localUri = downloadManager.getLocalFileUri(song.id)
             val uriToPlay = localUri ?: song.audioUrl
-
-            val mediaItem = MediaItem.fromUri(uriToPlay)
-            exoPlayer.setMediaItem(mediaItem)
-            exoPlayer.prepare()
+            MediaItem.Builder()
+                .setUri(uriToPlay)
+                .setMediaId(song.id)
+                .build()
         }
+
+        exoPlayer.setMediaItems(mediaItems)
+        if (startIndex in songs.indices) {
+            exoPlayer.seekTo(startIndex, 0L)
+        }
+        exoPlayer.prepare()
         exoPlayer.play()
+        updateState()
     }
 
     override fun pause() {
@@ -61,11 +74,17 @@ class PlayerControllerImpl @Inject constructor(
     }
 
     override fun next() {
-        exoPlayer.seekToNext()
+        if (exoPlayer.hasNextMediaItem()) {
+            exoPlayer.seekToNextMediaItem()
+        } else if (exoPlayer.repeatMode == Player.REPEAT_MODE_ALL) {
+            exoPlayer.seekTo(0, 0L)
+        }
     }
 
     override fun previous() {
-        exoPlayer.seekToPrevious()
+        if (exoPlayer.hasPreviousMediaItem()) {
+            exoPlayer.seekToPreviousMediaItem()
+        }
     }
 
     override fun seekTo(position: Long) {
@@ -77,8 +96,8 @@ class PlayerControllerImpl @Inject constructor(
         updateState()
     }
 
-    override fun toggleShuffle() {
-        exoPlayer.shuffleModeEnabled = !exoPlayer.shuffleModeEnabled
+    override fun toggleShuffle(enable: Boolean?) {
+        exoPlayer.shuffleModeEnabled = enable ?: !exoPlayer.shuffleModeEnabled
         updateState()
     }
 
@@ -118,8 +137,11 @@ class PlayerControllerImpl @Inject constructor(
     }
 
     private fun updateState() {
+        val currentMediaItem = exoPlayer.currentMediaItem
+        val song = currentPlaylist.find { it.id == currentMediaItem?.mediaId }
+        
         _playerState.value = _playerState.value.copy(
-            currentSong = currentSong,
+            currentSong = song,
             isPlaying = exoPlayer.isPlaying,
             currentPosition = exoPlayer.currentPosition,
             duration = exoPlayer.duration.coerceAtLeast(0L),
@@ -134,8 +156,7 @@ class PlayerControllerImpl @Inject constructor(
         progressJob = CoroutineScope(Dispatchers.Main).launch {
             while (isActive) {
                 updateState()
-                handleCrossfade()
-                delay(500) // Lower delay for smooth fade steps
+                delay(1000)
             }
         }
     }
@@ -143,10 +164,5 @@ class PlayerControllerImpl @Inject constructor(
     private fun stopProgressUpdate() {
         progressJob?.cancel()
         progressJob = null
-    }
-
-    private fun handleCrossfade() {
-        // Disabled experimental crossfade to fix audio muting issues
-        exoPlayer.volume = 1.0f
     }
 }

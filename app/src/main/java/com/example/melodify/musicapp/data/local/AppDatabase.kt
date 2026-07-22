@@ -21,7 +21,7 @@ import com.melodify.musicapp.data.local.entity.*
         PlaylistEntity::class,
         RecentSongEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(MessageConverters::class)

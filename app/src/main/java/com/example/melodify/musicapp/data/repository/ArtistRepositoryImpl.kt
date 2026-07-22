@@ -8,10 +8,6 @@ import com.melodify.musicapp.domain.repository.ArtistRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of ArtistRepository
- * Manages artist data and follow/unfollow from Firestore
- */
 @Singleton
 class ArtistRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -19,29 +15,29 @@ class ArtistRepositoryImpl @Inject constructor(
 ) : ArtistRepository {
 
     override suspend fun getArtists(): List<Artist> {
-        // TODO: Implement artists collection in Firestore
-        return emptyList()
+        // Mock data aligned with UserMockData IDs to ensure navigation works
+        return listOf(
+            Artist("user_001", "Armin Rahimi", "https://picsum.photos/seed/armin/200/200", 1250),
+            Artist("user_002", "Sara vibes", "https://picsum.photos/seed/sara/200/200", 870),
+            Artist("user_003", "DJ Nima", "https://picsum.photos/seed/nima/200/200", 5400)
+        )
     }
 
     override suspend fun getArtist(id: String): Artist {
-        // TODO: Implement getArtist in Firestore
-        throw Exception("Not implemented yet")
+        return getArtists().find { it.id == id } ?: getArtists().first()
     }
 
     override suspend fun getArtistSongs(id: String): List<Song> {
-        // TODO: Implement getArtistSongs in Firestore
         return emptyList()
     }
 
     override suspend fun followArtist(id: String) {
-        // Similar to follow user implementation
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
-        // firestoreDataSource.followArtist(currentUserId, id)
+        try { firestoreDataSource.followUser(currentUserId, id) } catch (e: Exception) {}
     }
 
     override suspend fun unfollowArtist(id: String) {
-        // Similar to unfollow user implementation
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
-        // firestoreDataSource.unfollowArtist(currentUserId, id)
+        try { firestoreDataSource.unfollowUser(currentUserId, id) } catch (e: Exception) {}
     }
 }

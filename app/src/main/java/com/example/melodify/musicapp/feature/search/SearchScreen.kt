@@ -23,11 +23,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.melodify.musicapp.domain.model.SearchResult
 import com.melodify.musicapp.R
@@ -73,7 +73,6 @@ fun SearchScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                // 1. Show Search History
                 if (uiState.history.isNotEmpty()) {
                     item {
                         SearchHistorySection(
@@ -84,7 +83,6 @@ fun SearchScreen(
                     }
                 }
 
-                // 2. Show Local Songs
                 if (uiState.localSongs.isNotEmpty()) {
                     item {
                         Text(
@@ -100,34 +98,18 @@ fun SearchScreen(
                 }
             }
         } else {
+            if (uiState.totalCount > 0) {
+                Text(
+                    text = "Results (${uiState.totalCount}):",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
             SearchResultsList(searchResults, onSongClick, onUserClick = onUserClick)
         }
     }
 }
-
-//@Composable
-//fun SearchResultsList(songs: LazyPagingItems<Song>, onSongClick: (Song) -> Unit) {
-//    LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-//        items(
-//            count = songs.itemCount,
-//            key = songs.itemKey { it.id }
-//        ) { index ->
-//            songs[index]?.let { song ->
-//                SearchResultItem(song = song, onClick = { onSongClick(song) })
-//            }
-//        }
-//
-//        when (songs.loadState.refresh) {
-//            is LoadState.Loading -> {
-//                items(5) {
-//                    Box(modifier = Modifier.fillMaxWidth().height(72.dp).padding(16.dp).clip(RoundedCornerShape(8.dp)).shimmerEffect())
-//                }
-//            }
-//            is LoadState.Error -> { /* Handle Error */ }
-//            else -> {}
-//        }
-//    }
-//}
 
 @Composable
 fun SearchResultsList(
@@ -135,55 +117,47 @@ fun SearchResultsList(
     onSongClick: (Song) -> Unit,
     onUserClick: (User) -> Unit
 ) {
-
     LazyColumn(
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-
         items(
             count = results.itemCount
         ) { index ->
-
             when(val item = results[index]) {
-
                 is SearchResult.SongResult -> {
-                    SearchResultItem(
-                        song = item.song,
-                        onClick = {
-                            onSongClick(item.song)
-                        }
-                    )
+                    SearchResultItem(song = item.song, onClick = { onSongClick(item.song) })
                 }
-
-
                 is SearchResult.UserResult -> {
-                    UserSearchItem(
-                        user = item.user,
-                        onUserClick = onUserClick
+                    UserSearchItem(user = item.user, onUserClick = onUserClick)
+                }
+                is SearchResult.Header -> {
+                    val style = if (item.title == "Songs" || item.title == "Users") {
+                        MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    } else {
+                        MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                    }
+                    Text(
+                        text = item.title,
+                        style = style,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
-
                 null -> {}
             }
         }
 
-
-        when(results.loadState.refresh) {
-
-            is LoadState.Loading -> {
-                items(5) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(72.dp)
-                            .padding(16.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .shimmerEffect()
-                    )
-                }
+        // Only show shimmer if loading AND we don't have enough results yet
+        if (results.loadState.refresh is LoadState.Loading && results.itemCount == 0) {
+            items(5) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .shimmerEffect()
+                )
             }
-
-            else -> {}
         }
     }
 }
@@ -194,7 +168,6 @@ fun UserSearchItem(
     user: User,
     onUserClick: (User) -> Unit
 ){
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -211,35 +184,18 @@ fun UserSearchItem(
             contentScale = ContentScale.Crop
         )
 
-//        AsyncImage(
-//            model = user.avatarUrl,
-//            contentDescription = null,
-//            modifier = Modifier
-//                .size(56.dp)
-//                .clip(RoundedCornerShape(50))
-//        )
-
-
-        Spacer(
-            Modifier.width(16.dp)
-        )
-
+        Spacer(Modifier.width(16.dp))
 
         Column {
-
             Text(
                 text = user.username,
                 fontWeight = FontWeight.Bold
             )
-
-
             Text(
                 text = "@${user.username}",
                 color = Color.Gray,
                 style = MaterialTheme.typography.bodySmall
             )
-
-
             if (user.isFollowing) {
                 Text(
                     text = "Following",
@@ -247,9 +203,7 @@ fun UserSearchItem(
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-
         }
-
     }
 }
 
@@ -300,7 +254,6 @@ fun SearchHistorySection(
             TextButton(onClick = onClearHistory) {  Text(text = stringResource(R.string.clear_all)) }
         }
 
-        // Changed from LazyColumn to a regular Column with forEach
         Column {
             history.forEach { item ->
                 Row(

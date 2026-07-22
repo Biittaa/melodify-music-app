@@ -44,11 +44,21 @@ interface PlaylistRepository {
     suspend fun addSong(playlistId: String, songId: String)
 
     /**
+     * Add multiple songs to a playlist
+     */
+    suspend fun addSongs(playlistId: String, songIds: List<String>)
+
+    /**
      * Remove a song from a playlist
      * @param playlistId ID of the playlist
      * @param songId ID of the song to remove
      */
     suspend fun removeSong(playlistId: String, songId: String)
+
+    /**
+     * Update the order of songs in a playlist
+     */
+    suspend fun updateSongsOrder(playlistId: String, songIds: List<String>)
 
     /**
      * Get all songs in a specific playlist (non-paginated)

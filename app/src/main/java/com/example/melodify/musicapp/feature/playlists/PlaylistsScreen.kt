@@ -1,6 +1,8 @@
 package com.melodify.musicapp.feature.playlists
 
-import androidx.compose.foundation.clickable
+import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -9,13 +11,17 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,13 +38,56 @@ fun PlaylistsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showCreateDialog by remember { mutableStateOf(false) }
+    var selectedPlaylistId by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     if (showCreateDialog) {
-        CreatePlaylistDialog(
+        PlaylistInputDialog(
+            title = "ساخت پلی‌لیست جدید",
             onDismiss = { showCreateDialog = false },
             onConfirm = { name ->
-                viewModel.createPlaylist(name)
-                showCreateDialog = false
+                viewModel.createPlaylist(name) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    if (success) showCreateDialog = false
+                }
+            }
+        )
+    }
+
+    if (showRenameDialog && selectedPlaylistId != null) {
+        val currentName = uiState.userPlaylists.find { it.id == selectedPlaylistId }?.title ?: ""
+        PlaylistInputDialog(
+            title = "تغییر نام پلی‌لیست",
+            initialValue = currentName,
+            onDismiss = { showRenameDialog = false },
+            onConfirm = { newName ->
+                viewModel.renamePlaylist(selectedPlaylistId!!, newName) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                    if (success) {
+                        selectedPlaylistId = null
+                        showRenameDialog = false
+                    }
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirm && selectedPlaylistId != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("حذف پلی‌لیست") },
+            text = { Text("آیا از حذف این پلی‌لیست اطمینان دارید؟") },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.deletePlaylist(selectedPlaylistId!!)
+                    selectedPlaylistId = null
+                    showDeleteConfirm = false
+                }) { Text("بله") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("خیر") }
             }
         )
     }
@@ -48,8 +97,20 @@ fun PlaylistsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.playlists), fontWeight = FontWeight.Bold) },
                 actions = {
-                    IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                    if (selectedPlaylistId != null) {
+                        IconButton(onClick = { showRenameDialog = true }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Rename")
+                        }
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
+                        IconButton(onClick = { selectedPlaylistId = null }) {
+                            Icon(Icons.Default.Add, contentDescription = "Clear Selection", modifier = Modifier.graphicsLayer { rotationZ = 45f })
+                        }
+                    } else {
+                        IconButton(onClick = { showCreateDialog = true }) {
+                            Icon(Icons.Default.Add, contentDescription = "Add")
+                        }
                     }
                 }
             )
@@ -65,23 +126,45 @@ fun PlaylistsScreen(
             if (uiState.userPlaylists.isNotEmpty()) {
                 item(span = { GridItemSpan(2) }) { SectionHeader(title = stringResource(R.string.my_playlists)) }
                 items(uiState.userPlaylists) { playlist ->
-                    PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) })
+                    PlaylistItem(
+                        playlist = playlist,
+                        isSelected = selectedPlaylistId == playlist.id,
+                        onClick = {
+                            if (selectedPlaylistId != null) {
+                                selectedPlaylistId = if (selectedPlaylistId == playlist.id) null else playlist.id
+                            } else {
+                                onPlaylistClick(playlist)
+                            }
+                        },
+                        onLongClick = {
+                            selectedPlaylistId = playlist.id
+                        }
+                    )
                 }
             }
             item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی داخلی") }
-            items(uiState.internalMusic) { playlist -> PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) }) }
+            items(uiState.internalMusic) { playlist ->
+                PlaylistItem(playlist = playlist, isSelected = false, onClick = { onPlaylistClick(playlist) }, onLongClick = {})
+            }
             item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی جهان") }
-            items(uiState.globalMusic) { playlist -> PlaylistItem(playlist = playlist, onClick = { onPlaylistClick(playlist) }) }
+            items(uiState.globalMusic) { playlist ->
+                PlaylistItem(playlist = playlist, isSelected = false, onClick = { onPlaylistClick(playlist) }, onLongClick = {})
+            }
         }
     }
 }
 
 @Composable
-fun CreatePlaylistDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var name by remember { mutableStateOf("") }
+fun PlaylistInputDialog(
+    title: String,
+    initialValue: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(initialValue) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("ساخت پلی‌لیست جدید") },
+        title = { Text(title) },
         text = {
             OutlinedTextField(
                 value = name,
@@ -91,7 +174,7 @@ fun CreatePlaylistDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
             )
         },
         confirmButton = {
-            Button(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("ایجاد") }
+            Button(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("ذخیره") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("انصراف") }
@@ -104,9 +187,24 @@ fun SectionHeader(title: String) {
     Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PlaylistItem(playlist: Playlist, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().clickable { onClick() }, shape = RoundedCornerShape(12.dp)) {
+fun PlaylistItem(
+    playlist: Playlist,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
+        shape = RoundedCornerShape(12.dp),
+        colors = if (isSelected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors()
+    ) {
         Column {
             Box(modifier = Modifier.aspectRatio(1f)) {
                 if (playlist.coverUrl.isNotEmpty()) {

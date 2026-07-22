@@ -46,6 +46,7 @@ fun NowPlayingScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsState()
+    val isLiked by viewModel.isCurrentSongLiked.collectAsState()
     val song = playerState.currentSong ?: return
 
     var showSpeedDialog by remember { mutableStateOf(false) }
@@ -118,11 +119,11 @@ fun NowPlayingScreen(
                     Text(song.title, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
                     Text("Melodify Stream", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
                 }
-                IconButton(onClick = { viewModel.toggleLike(song) }) {
+                IconButton(onClick = { viewModel.toggleLike(song.id, isLiked) }) {
                     Icon(
-                        imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                        imageVector = if (isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Like",
-                        tint = if (song.isLiked) Color.Red else Color.White,
+                        tint = if (isLiked) Color.Red else Color.White,
                         modifier = Modifier.size(32.dp)
                     )
                 }

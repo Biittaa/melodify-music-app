@@ -48,8 +48,9 @@ class ArtistViewModel @Inject constructor(
 
     private fun getDummyArtists(): List<Artist> {
         return listOf(
-            Artist("1", "Artist One", "", 1000),
-            Artist("2", "Artist Two", "", 500)
+            Artist("user_001", "Armin Rahimi", "https://picsum.photos/seed/armin/200/200", 1250),
+            Artist("user_002", "Sara Ahmadi", "https://picsum.photos/seed/sara/200/200", 870),
+            Artist("user_003", "Nima Karimi", "https://picsum.photos/seed/nima/200/200", 5400)
         )
     }
 }

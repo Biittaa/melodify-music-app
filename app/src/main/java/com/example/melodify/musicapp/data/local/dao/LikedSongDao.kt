@@ -9,6 +9,9 @@ interface LikedSongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(song: LikedSongEntity)
 
+    @Query("DELETE FROM liked_songs WHERE songId = :songId")
+    suspend fun deleteById(songId: String)
+
     @Delete
     suspend fun delete(song: LikedSongEntity)
 
@@ -17,4 +20,7 @@ interface LikedSongDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM liked_songs WHERE songId = :songId)")
     suspend fun isLiked(songId: String): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM liked_songs WHERE songId = :songId)")
+    fun isLikedFlow(songId: String): Flow<Boolean>
 }

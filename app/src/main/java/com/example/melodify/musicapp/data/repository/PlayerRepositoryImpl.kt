@@ -11,7 +11,6 @@ import javax.inject.Singleton
 /**
  * Implementation of PlayerRepository
  * Delegates all playback operations to IPlayerController
- * This is a bridge between data layer and Player module
  */
 @Singleton
 class PlayerRepositoryImpl @Inject constructor(
@@ -20,6 +19,10 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override fun play(song: Song) {
         playerController.play(song)
+    }
+
+    override fun playPlaylist(songs: List<Song>, startIndex: Int) {
+        playerController.playPlaylist(songs, startIndex)
     }
 
     override fun pause() {
@@ -46,8 +49,8 @@ class PlayerRepositoryImpl @Inject constructor(
         playerController.setSpeed(speed)
     }
 
-    override fun toggleShuffle() {
-        playerController.toggleShuffle()
+    override fun toggleShuffle(enable: Boolean?) {
+        playerController.toggleShuffle(enable)
     }
 
     override fun setRepeatMode(mode: Int) {

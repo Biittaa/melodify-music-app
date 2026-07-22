@@ -4,10 +4,11 @@ import com.melodify.musicapp.domain.model.Song
 
 object MockData {
     val songs = (1..60).map { i ->
+        val artistIndex = (i % 3) + 1
         Song(
             id = "mock_song_$i",
             title = "Melody #$i",
-            artistId = "Artist ${i % 5 + 1}",
+            artistId = "user_00$artistIndex", // Match UserMockData IDs
             albumId = "Album ${i % 10 + 1}",
             coverUrl = "https://picsum.photos/seed/$i/400/400",
             audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${(i % 10) + 1}.mp3",

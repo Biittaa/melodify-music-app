@@ -16,10 +16,6 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Implementation of PlaylistRepository
- * Manages playlist CRUD operations and song associations
- */
 @Singleton
 class PlaylistRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
@@ -29,7 +25,6 @@ class PlaylistRepositoryImpl @Inject constructor(
 ) : PlaylistRepository {
 
     override suspend fun getUserPlaylists(userId: String): List<Playlist> {
-        // Load from local database instantly instead of waiting for internet
         return playlistDao.getAllPlaylists().map {
             Playlist(it.id, it.title, it.description, it.coverUrl, it.ownerId, it.songsCount, it.isPublic)
         }
@@ -47,12 +42,10 @@ class PlaylistRepositoryImpl @Inject constructor(
             isPublic = true
         )
 
-        // 1. Save to local database (so it stays forever, even offline)
         playlistDao.insert(
             PlaylistEntity(playlist.id, playlist.title, playlist.description, playlist.coverUrl, playlist.ownerId, playlist.songsCount, playlist.isPublic)
         )
 
-        // 2. Try to sync to the cloud in the background
         try {
             if (userId != "local_user") {
                 firestoreDataSource.createPlaylist(playlist)
@@ -63,42 +56,108 @@ class PlaylistRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updatePlaylist(playlist: Playlist) {
-        firestoreDataSource.updatePlaylist(playlist)
+        playlistDao.update(
+            PlaylistEntity(playlist.id, playlist.title, playlist.description, playlist.coverUrl, playlist.ownerId, playlist.songsCount, playlist.isPublic)
+        )
+        try {
+            firestoreDataSource.updatePlaylist(playlist)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun deletePlaylist(id: String) {
-        firestoreDataSource.deletePlaylist(id)
+        playlistDao.deleteById(id)
+        try {
+            firestoreDataSource.deletePlaylist(id)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override suspend fun addSong(playlistId: String, songId: String) {
-        firestoreDataSource.addSongToPlaylist(playlistId, songId)
-        // Also cache in Room for offline
+        val maxPos = playlistSongDao.getMaxPosition(playlistId) ?: -1
         playlistSongDao.insert(
             PlaylistSongEntity(
                 playlistId = playlistId,
                 songId = songId,
-                addedAt = System.currentTimeMillis()
+                addedAt = System.currentTimeMillis(),
+                position = maxPos + 1
             )
         )
+        try {
+            firestoreDataSource.addSongToPlaylist(playlistId, songId)
+        } catch (e: Exception) { }
+        updatePlaylistCover(playlistId)
+    }
+
+    override suspend fun addSongs(playlistId: String, songIds: List<String>) {
+        var maxPos = playlistSongDao.getMaxPosition(playlistId) ?: -1
+        val entities = songIds.map {
+            maxPos++
+            PlaylistSongEntity(playlistId, it, System.currentTimeMillis(), maxPos)
+        }
+        playlistSongDao.insertAll(entities)
+        
+        songIds.forEach { songId ->
+            try {
+                firestoreDataSource.addSongToPlaylist(playlistId, songId)
+            } catch (e: Exception) { }
+        }
+        updatePlaylistCover(playlistId)
     }
 
     override suspend fun removeSong(playlistId: String, songId: String) {
-        firestoreDataSource.removeSongFromPlaylist(playlistId, songId)
-        // Remove from Room cache
         playlistSongDao.delete(PlaylistSongEntity(playlistId, songId, 0))
+        try {
+            firestoreDataSource.removeSongFromPlaylist(playlistId, songId)
+        } catch (e: Exception) { }
+        updatePlaylistCover(playlistId)
+    }
+
+    override suspend fun updateSongsOrder(playlistId: String, songIds: List<String>) {
+        songIds.forEachIndexed { index, songId ->
+            playlistSongDao.updatePosition(playlistId, songId, index)
+        }
+    }
+
+    private suspend fun updatePlaylistCover(playlistId: String) {
+        val songs = getPlaylistSongs(playlistId)
+        val firstSongWithCover = songs.firstOrNull { it.coverUrl.isNotEmpty() }
+        val coverUrl = firstSongWithCover?.coverUrl ?: ""
+        
+        val localPlaylist = playlistDao.getPlaylistById(playlistId)
+        if (localPlaylist != null) {
+            val updated = localPlaylist.copy(coverUrl = coverUrl, songsCount = songs.size)
+            playlistDao.update(updated)
+            
+            val domainPlaylist = Playlist(updated.id, updated.title, updated.description, updated.coverUrl, updated.ownerId, updated.songsCount, updated.isPublic)
+            try {
+                firestoreDataSource.updatePlaylist(domainPlaylist)
+            } catch (e: Exception) { }
+        }
     }
 
     override suspend fun getPlaylistSongs(playlistId: String): List<Song> {
-        // Fix: If it's one of the mock playlists (i1, i2, g1, g2), load fake songs so the screen opens!
-        if (playlistId in listOf("i1", "i2", "g1", "g2")) {
-            return MockData.songs.shuffled().take(10)
+        val localRelations = playlistSongDao.getSongsForPlaylist(playlistId)
+        if (localRelations.isEmpty()) {
+             // Fallback to firestore or mock for specific IDs
+             if (playlistId in listOf("i1", "i2", "g1", "g2")) {
+                return MockData.songs.shuffled().take(10)
+             }
+             return try {
+                firestoreDataSource.getPlaylistSongs(playlistId)
+             } catch (e: Exception) {
+                emptyList()
+             }
         }
-
-        return try {
-            firestoreDataSource.getPlaylistSongs(playlistId)
-        } catch (e: Exception) {
-            // If offline, just show some random songs for now
-            MockData.songs.shuffled().take(5)
+        
+        // Fetch full song objects. In a real app, you'd have a SongDao. 
+        // For now, we use MockData or local scanner logic via a repository if we had it here.
+        // Assuming we can get them from SongRepository. But here we just filter from all available for simplicity.
+        val allSongs = MockData.songs // + local scanned songs
+        return localRelations.mapNotNull { relation ->
+            allSongs.find { it.id == relation.songId }
         }
     }
 

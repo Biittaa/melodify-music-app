@@ -70,12 +70,13 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History)
     object SongList : Screen("song_list/{title}")
 
-    object OtherUserProfile : Screen("other_user_profile/{userId}?userId={userId}")
+    object OtherUserProfile : Screen("other_user_profile/{userId}")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    mainViewModel: MainViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel()
 ) {
@@ -85,7 +86,15 @@ fun MainScreen(
     val currentDestination = navBackStackEntry?.destination
 
     val profileUiState by profileViewModel.uiState.collectAsState()
+    val authState by mainViewModel.authState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
+
+    if (authState == AuthState.Loading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -167,18 +176,24 @@ fun MainScreen(
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route,
+                startDestination = if (authState == AuthState.Authenticated) Screen.Home.route else Screen.Login.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Screen.Login.route) {
                     LoginScreen(
-                        onLoginSuccess = { navController.navigate(Screen.Home.route) { popUpTo(0) } },
+                        onLoginSuccess = { 
+                            mainViewModel.checkAuth()
+                            navController.navigate(Screen.Home.route) { popUpTo(0) } 
+                        },
                         onNavigateToRegister = { navController.navigate(Screen.Register.route) }
                     )
                 }
                 composable(Screen.Register.route) {
                     RegisterScreen(
-                        onRegisterSuccess = { navController.navigate(Screen.Home.route) { popUpTo(0) } },
+                        onRegisterSuccess = { 
+                            mainViewModel.checkAuth()
+                            navController.navigate(Screen.Home.route) { popUpTo(0) } 
+                        },
                         onNavigateToLogin = { navController.navigate(Screen.Login.route) }
                     )
                 }
@@ -227,13 +242,8 @@ fun MainScreen(
                     )
                 }
                 composable(
-                    route = "other_user_profile/{userId}",
-                    arguments = listOf(
-                        navArgument("userId") {
-                            type = NavType.StringType
-                            nullable = false
-                        }
-                    )
+                    route = Screen.OtherUserProfile.route,
+                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
                 ) { backStackEntry ->
                     val userId = backStackEntry.arguments?.getString("userId") ?: ""
                     OtherUserProfileScreen(
@@ -255,7 +265,11 @@ fun MainScreen(
                 composable(Screen.Profile.route) {
                     ProfileScreen(
                         onSettingsClick = { navController.navigate(Screen.Settings.route) },
-                        onLogoutClick = { profileViewModel.logout() }
+                        onLogoutClick = { 
+                            profileViewModel.logout()
+                            mainViewModel.checkAuth()
+                            navController.navigate(Screen.Login.route) { popUpTo(0) }
+                        }
                     )
                 }
                 composable(Screen.Settings.route) { SettingsScreen(onBackClick = { navController.popBackStack() }) }
@@ -296,8 +310,8 @@ fun MainScreen(
                 composable(Screen.Artists.route) {
                     ArtistScreen(
                         onBackClick = { navController.popBackStack() },
-                        onArtistClick = { artist ->
-                            // Detail navigation could go here
+                        onArtistClick = { artistId ->
+                            navController.navigate("other_user_profile/$artistId")
                         }
                     )
                 }

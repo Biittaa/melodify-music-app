@@ -27,11 +27,9 @@ class PlaylistViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // CHANGED: Load playlists for everyone (using local_user fallback)
                 val userId = currentUserProvider.getCurrentUser()?.id ?: "local_user"
                 val userPlaylists = playlistRepository.getUserPlaylists(userId)
 
-                // Mocking categories as per requirements
                 val internal = listOf(
                     Playlist("i1", "پاپ فارسی", "مجموعه آهنگ‌های پاپ", "", "system", 12, true),
                     Playlist("i2", "سنتی", "موسیقی اصیل ایرانی", "", "system", 8, true)
@@ -55,10 +53,37 @@ class PlaylistViewModel @Inject constructor(
         }
     }
 
-    fun createPlaylist(name: String) {
+    fun createPlaylist(name: String, onResult: (Boolean, String) -> Unit) {
+        if (_uiState.value.userPlaylists.any { it.title.equals(name, ignoreCase = true) }) {
+            onResult(false, "پلی‌لیستی با این نام وجود دارد")
+            return
+        }
         viewModelScope.launch {
             playlistRepository.createPlaylist(name)
             loadPlaylists()
+            onResult(true, "پلی‌لیست ایجاد شد")
+        }
+    }
+
+    fun deletePlaylist(playlistId: String) {
+        viewModelScope.launch {
+            playlistRepository.deletePlaylist(playlistId)
+            loadPlaylists()
+        }
+    }
+
+    fun renamePlaylist(playlistId: String, newName: String, onResult: (Boolean, String) -> Unit) {
+        if (_uiState.value.userPlaylists.any { it.title.equals(newName, ignoreCase = true) && it.id != playlistId }) {
+            onResult(false, "پلی‌لیستی با این نام وجود دارد")
+            return
+        }
+        viewModelScope.launch {
+            val playlist = _uiState.value.userPlaylists.find { it.id == playlistId }
+            if (playlist != null) {
+                playlistRepository.updatePlaylist(playlist.copy(title = newName))
+                loadPlaylists()
+                onResult(true, "نام پلی‌لیست تغییر کرد")
+            }
         }
     }
 }

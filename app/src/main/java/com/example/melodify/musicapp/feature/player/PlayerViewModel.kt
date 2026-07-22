@@ -13,6 +13,7 @@ import com.melodify.musicapp.domain.repository.PlayerRepository
 import com.melodify.musicapp.domain.repository.UserRepository
 import com.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,6 +31,13 @@ class PlayerViewModel @Inject constructor(
     val playerState: StateFlow<PlayerState> = playerRepository.playerState()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PlayerState())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val isCurrentSongLiked: StateFlow<Boolean> = playerState
+        .flatMapLatest { state ->
+            state.currentSong?.let { songRepository.isLiked(it.id) } ?: flowOf(false)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private val _friendsList = MutableStateFlow<List<User>>(emptyList())
     val friendsList: StateFlow<List<User>> = _friendsList.asStateFlow()
 
@@ -41,6 +49,15 @@ class PlayerViewModel @Inject constructor(
         playerRepository.play(song)
         viewModelScope.launch {
             songRepository.recordSongPlay(song.id)
+        }
+    }
+
+    fun playPlaylist(songs: List<Song>, startIndex: Int) {
+        playerRepository.playPlaylist(songs, startIndex)
+        songs.getOrNull(startIndex)?.let { song ->
+            viewModelScope.launch {
+                songRepository.recordSongPlay(song.id)
+            }
         }
     }
 
@@ -59,20 +76,19 @@ class PlayerViewModel @Inject constructor(
     fun seekTo(position: Long) = playerRepository.seekTo(position)
     fun setSpeed(speed: Float) = playerRepository.setSpeed(speed)
     fun setSleepTimer(minutes: Int) = playerRepository.setSleepTimer(minutes)
-    fun toggleShuffle() = playerRepository.toggleShuffle()
+    fun toggleShuffle(enable: Boolean? = null) = playerRepository.toggleShuffle(enable)
     fun setRepeatMode(mode: Int) = playerRepository.setRepeatMode(mode)
 
-    fun toggleLike(song: Song) {
+    fun toggleLike(songId: String, isCurrentlyLiked: Boolean) {
         viewModelScope.launch {
-            if (song.isLiked) {
-                songRepository.unlikeSong(song.id)
+            if (isCurrentlyLiked) {
+                songRepository.unlikeSong(songId)
             } else {
-                songRepository.likeSong(song.id)
+                songRepository.likeSong(songId)
             }
         }
     }
 
-    // WorkManager download wrapper
     fun downloadSong(songId: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             when (val result = downloadRepository.download(songId)) {

@@ -168,6 +168,15 @@ class FirestoreDataSource @Inject constructor(
             .toObject<Song>()
     }
 
+    suspend fun getSongsByArtist(artistId: String): List<Song> {
+        return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
+            .whereEqualTo("artistId", artistId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject<Song>() }
+    }
+
     suspend fun likeSong(userId: String, songId: String) {
         val likeData = mapOf(
             "userId" to userId,

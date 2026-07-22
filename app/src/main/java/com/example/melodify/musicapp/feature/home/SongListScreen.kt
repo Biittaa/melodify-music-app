@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,15 +21,12 @@ fun SongListScreen(
     title: String,
     onBackClick: () -> Unit,
     onSongClick: (Song) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: SongListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
-    val songs = when (title) {
-        "Trending" -> uiState.trendingSongs
-        "New Releases" -> uiState.newestSongs
-        "My Local Music" -> uiState.trendingSongs.filter { it.id.startsWith("local_") }
-        else -> uiState.popularSongs
+
+    LaunchedEffect(title) {
+        viewModel.loadSongs(title)
     }
 
     Scaffold(
@@ -43,12 +41,18 @@ fun SongListScreen(
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            items(songs) { song ->
-                SearchResultItem(song = song, onClick = { onSongClick(song) })
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(uiState.songs) { song ->
+                    SearchResultItem(song = song, onClick = { onSongClick(song) })
+                }
             }
         }
     }

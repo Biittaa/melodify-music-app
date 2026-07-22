@@ -6,10 +6,7 @@ import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.SongRepository
 import com.melodify.musicapp.domain.repository.PlayerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,29 +22,17 @@ class LikedSongsViewModel @Inject constructor(
     private val playerRepository: PlayerRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LikedSongsUiState())
-    val uiState: StateFlow<LikedSongsUiState> = _uiState.asStateFlow()
-
-    init {
-        loadLikedSongs()
-    }
-
-    fun loadLikedSongs() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                val songs = songRepository.getLikedSongs()
-                _uiState.update { it.copy(isLoading = false, songs = songs) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
-    }
+    val uiState: StateFlow<LikedSongsUiState> = songRepository.getLikedSongs()
+        .map { songs -> LikedSongsUiState(songs = songs) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = LikedSongsUiState(isLoading = true)
+        )
 
     fun unlikeSong(songId: String) {
         viewModelScope.launch {
             songRepository.unlikeSong(songId)
-            loadLikedSongs() // Refresh list
         }
     }
 
@@ -55,7 +40,6 @@ class LikedSongsViewModel @Inject constructor(
         val songs = uiState.value.songs
         if (songs.isNotEmpty()) {
             playerRepository.play(songs.first())
-            // In a real app, you'd setup a queue here.
         }
     }
 }
