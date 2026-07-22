@@ -1,5 +1,7 @@
 package com.melodify.musicapp.domain.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class User(
     val id: String,
     val username: String,
@@ -12,8 +14,12 @@ data class User(
     val playlistsCount: Int,
     val isPremium: Boolean,
     val isFollowing: Boolean
-){
-    // ✅ سازنده بدون پارامتر برای Firestore
+) {
+    // فیلدهای اضافی برای Firebase (با @PropertyName)
+    @get:PropertyName("usernameSearch")
+    val usernameSearch: String = username.lowercase()
+
+    // سازنده بدون پارامتر برای Firestore
     constructor() : this(
         id = "",
         username = "",

@@ -39,10 +39,10 @@ class SearchRepositoryImpl @Inject constructor(
         return emptyList()
     }
 
-    override suspend fun searchUsers(query: String): List<User> {
-        // TODO: Implement user search in Firestore
-        return emptyList()
-    }
+//    override suspend fun searchUsers(query: String): List<User> {
+//        // TODO: Implement user search in Firestore
+//        return emptyList()
+//    }
 
     override suspend fun saveHistory(query: String) {
         val history = SearchHistoryEntity(
@@ -65,6 +65,16 @@ class SearchRepositoryImpl @Inject constructor(
                 keyword = entity.keyword,
                 searchedAt = entity.searchedAt
             )
+        }
+    }
+
+
+    override suspend fun searchUsers(query: String): List<User> {
+        return try {
+            firestoreDataSource.searchUsers(query)
+        } catch (e: Exception) {
+
+            emptyList()
         }
     }
 }

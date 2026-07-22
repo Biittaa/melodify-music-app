@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
 import com.melodify.musicapp.core.common.Result
 import com.melodify.musicapp.domain.model.User
 import kotlinx.coroutines.tasks.await
@@ -13,7 +14,8 @@ import javax.inject.Singleton
 
 @Singleton
 class FirebaseAuthDataSource @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
 ) {
 
     suspend fun login(email: String, password: String): Result<User> {
@@ -94,5 +96,28 @@ class FirebaseAuthDataSource @Inject constructor(
             isPremium = false,
             isFollowing = false
         )
+    }
+
+    // در FirebaseAuthDataSource.kt یا AuthRepositoryImpl.kt
+    suspend fun createUserInFirestore(user: User) {
+        val userMap = mapOf(
+            "id" to user.id,
+            "username" to user.username,
+            "fullName" to user.fullName,
+            "email" to user.email,
+            "profileImage" to user.profileImage,
+            "bio" to user.bio,
+            "followersCount" to user.followersCount,
+            "followingCount" to user.followingCount,
+            "playlistsCount" to user.playlistsCount,
+            "isPremium" to user.isPremium,
+            "isFollowing" to user.isFollowing,
+            "usernameSearch" to user.username.lowercase() // این خط مهم است!
+        )
+
+        firestore.collection("users")
+            .document(user.id)
+            .set(userMap)
+            .await()
     }
 }
