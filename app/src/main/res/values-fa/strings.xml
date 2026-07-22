@@ -42,5 +42,9 @@
     <string name="filter_artists">هنرمندان</string>
     <string name="filter_users">کاربران</string>
 
+    <string name="search_history">تاریخچه جستجو</string>
+    <string name="clear_all">پاک کردن همه</string>
+    <string name="no_recent_searches">جستجوی اخیری وجود ندارد</string>
+
 
 </resources>

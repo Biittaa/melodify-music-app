@@ -296,8 +296,8 @@ fun SearchHistorySection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Recent Searches", fontWeight = FontWeight.Bold)
-            TextButton(onClick = onClearHistory) { Text(text = "Clear All") }
+            Text(text = stringResource(R.string.search_history), fontWeight = FontWeight.Bold)
+            TextButton(onClick = onClearHistory) {  Text(text = stringResource(R.string.clear_all)) }
         }
 
         // Changed from LazyColumn to a regular Column with forEach

@@ -41,6 +41,9 @@
     <string name="filter_artists">Artists</string>
     <string name="filter_users">Users</string>
 
+    <string name="search_history">Search History</string>
+    <string name="clear_all">Clear All</string>
+    <string name="no_recent_searches">No recent searches</string>
 
 
 </resources>
