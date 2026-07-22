@@ -7,12 +7,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn // Resolved import
-import androidx.compose.foundation.lazy.items // Resolved import
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -107,8 +108,26 @@ fun NowPlayingScreen(
             Spacer(modifier = Modifier.weight(0.5f))
             RotatingDisk(song = song, isPlaying = playerState.isPlaying)
             Spacer(modifier = Modifier.weight(0.5f))
-            Text(song.title, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-            Text("Melodify Stream", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(song.title, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text("Melodify Stream", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
+                }
+                IconButton(onClick = { viewModel.toggleLike(song) }) {
+                    Icon(
+                        imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (song.isLiked) Color.Red else Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
             WaveformVisualizer(isPlaying = playerState.isPlaying, color = backgroundColor)
             Spacer(modifier = Modifier.height(32.dp))

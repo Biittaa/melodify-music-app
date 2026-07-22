@@ -36,6 +36,7 @@ import com.melodify.musicapp.domain.model.Playlist
 import com.melodify.musicapp.feature.auth.LoginScreen
 import com.melodify.musicapp.feature.auth.RegisterScreen
 import com.melodify.musicapp.feature.home.HomeScreen
+import com.melodify.musicapp.feature.home.SongListScreen
 import com.melodify.musicapp.feature.search.SearchScreen
 import com.melodify.musicapp.feature.downloads.DownloadsScreen
 import com.melodify.musicapp.feature.playlists.PlaylistsScreen
@@ -51,7 +52,7 @@ import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.player.PlayerViewModel
 import com.melodify.musicapp.feature.artist.ArtistScreen
 import com.melodify.musicapp.feature.profile.OtherUserProfileScreen
-import com.melodify.musicapp.feature.recent.RecentSongsScreen   // <-- صفحه جدید
+import com.melodify.musicapp.feature.recent.RecentSongsScreen
 
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
     object Home : Screen("home", R.string.home, Icons.Default.Home)
@@ -67,8 +68,8 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object LikedSongs : Screen("liked_songs", R.string.liked_songs)
     object Artists : Screen("artists", R.string.top_artists, Icons.Default.Person)
     object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History)
+    object SongList : Screen("song_list/{title}")
 
-//    object OtherUserProfile : Screen("other_user_profile/{userId}")
     object OtherUserProfile : Screen("other_user_profile/{userId}?userId={userId}")
 }
 
@@ -85,14 +86,6 @@ fun MainScreen(
 
     val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
-
-//    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
-//        if (!profileUiState.isLoading && profileUiState.user == null) {
-//            navController.navigate(Screen.Login.route) {
-//                popUpTo(0) { inclusive = true }
-//            }
-//        }
-//    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -111,7 +104,6 @@ fun MainScreen(
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-//                                Text("Melodify", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                                 Text(
                                     stringResource(R.string.app_name),
                                     fontWeight = FontWeight.ExtraBold,
@@ -199,10 +191,27 @@ fun MainScreen(
                         onQuickActionClick = { action: String ->
                             when(action) {
                                 "liked" -> navController.navigate(Screen.LikedSongs.route)
-                                "recent" -> navController.navigate(Screen.RecentSongs.route) // <-- تغییر
+                                "recent" -> navController.navigate(Screen.RecentSongs.route)
                                 "playlists" -> navController.navigate(Screen.Playlists.route)
-                                "artists" -> navController.navigate(Screen.Artists.route)   // <-- تغییر
+                                "artists" -> navController.navigate(Screen.Artists.route)
                             }
+                        },
+                        onSeeAllClick = { title ->
+                            navController.navigate("song_list/$title")
+                        }
+                    )
+                }
+                composable(
+                    route = Screen.SongList.route,
+                    arguments = listOf(navArgument("title") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val title = backStackEntry.arguments?.getString("title") ?: ""
+                    SongListScreen(
+                        title = title,
+                        onBackClick = { navController.popBackStack() },
+                        onSongClick = { song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
                         }
                     )
                 }
@@ -215,16 +224,6 @@ fun MainScreen(
                         onUserClick = { user ->
                             navController.navigate("other_user_profile/${user.id}")
                         }
-                    )
-                }
-                composable(
-                    route = Screen.OtherUserProfile.route,
-                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
-                    OtherUserProfileScreen(
-                        userId = userId,
-                        onBackClick = { navController.popBackStack() }
                     )
                 }
                 composable(
@@ -294,16 +293,14 @@ fun MainScreen(
                         }
                     )
                 }
-                // صفحه هنرمندان (جایگزین SocialScreen)
                 composable(Screen.Artists.route) {
                     ArtistScreen(
+                        onBackClick = { navController.popBackStack() },
                         onArtistClick = { artist ->
-                            // می‌توانید به صفحه آهنگ‌های آن هنرمند بروید
-                            navController.popBackStack()
+                            // Detail navigation could go here
                         }
                     )
                 }
-                // صفحه اخیراً شنیده شده
                 composable(Screen.RecentSongs.route) {
                     RecentSongsScreen(
                         onBackClick = { navController.popBackStack() },

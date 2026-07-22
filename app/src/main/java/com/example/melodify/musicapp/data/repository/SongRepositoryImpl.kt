@@ -5,13 +5,16 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.melodify.musicapp.domain.model.SearchFilter
+import kotlinx.coroutines.flow.first
 
 // Standard Namespace Imports
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.core.common.MockData
 import com.melodify.musicapp.core.common.LocalMusicScanner
 import com.melodify.musicapp.data.local.dao.LikedSongDao
+import com.melodify.musicapp.data.local.dao.RecentSongDao
 import com.melodify.musicapp.data.local.entity.LikedSongEntity
+import com.melodify.musicapp.data.local.entity.RecentSongEntity
 import com.melodify.musicapp.data.paging.SongSearchPagingSource
 import com.melodify.musicapp.data.remote.firestore.FirestoreDataSource
 import com.melodify.musicapp.domain.model.Song
@@ -21,6 +24,7 @@ import com.melodify.musicapp.domain.repository.SongRepository
 class SongRepositoryImpl @Inject constructor(
     private val firestoreDataSource: FirestoreDataSource,
     private val likedSongDao: LikedSongDao,
+    private val recentSongDao: RecentSongDao,
     private val currentUserProvider: CurrentUserProvider,
     private val localMusicScanner: LocalMusicScanner
 ) : SongRepository {
@@ -124,9 +128,47 @@ class SongRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRecentlyPlayed(): List<Song> {
-        return MockData.songs.shuffled().take(10)
+        val entities = recentSongDao.getAllRecentSongs().first()
+        return entities.map { entity ->
+            Song(
+                id = entity.songId,
+                title = entity.title,
+                artistId = entity.artistId,
+                albumId = entity.albumId,
+                coverUrl = entity.coverUrl,
+                audioUrl = entity.audioUrl,
+                duration = entity.duration,
+                genre = "",
+                playCount = 0,
+                isLiked = false,
+                isDownloaded = false
+            )
+        }
     }
+
     override suspend fun getLocalMusic(): List<Song> {
-        return getLocalSongs() // This uses the existing private helper function
+        return getLocalSongs()
+    }
+
+    override suspend fun recordSongPlay(songId: String) {
+        try {
+            val song = getSong(songId)
+            recentSongDao.insertRecentSong(
+                RecentSongEntity(
+                    songId = song.id,
+                    title = song.title,
+                    artistId = song.artistId,
+                    albumId = song.albumId,
+                    coverUrl = song.coverUrl,
+                    audioUrl = song.audioUrl,
+                    duration = song.duration,
+                    playedAt = System.currentTimeMillis()
+                )
+            )
+            val userId = currentUserProvider.getCurrentUser()?.id
+            if (userId != null) {
+                firestoreDataSource.recordSongPlay(userId, songId)
+            }
+        } catch (e: Exception) {}
     }
 }

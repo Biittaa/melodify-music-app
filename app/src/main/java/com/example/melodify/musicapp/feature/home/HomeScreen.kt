@@ -1,4 +1,4 @@
-package com.melodify.musicapp.feature.home // Unified Package
+package com.melodify.musicapp.feature.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -10,10 +10,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,7 +36,8 @@ import com.melodify.musicapp.ui.components.shimmerEffect
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
-    onQuickActionClick: (String) -> Unit
+    onQuickActionClick: (String) -> Unit,
+    onSeeAllClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -53,14 +52,33 @@ fun HomeScreen(
         } else {
             item { HomeCarousel(songs = uiState.trendingSongs.take(5), onSongClick = onSongClick) }
             item { QuickActionsSection(onQuickActionClick) }
-            item { SongSection(title = stringResource(R.string.new_releases), songs = uiState.newestSongs, onSongClick = onSongClick) }
-            item { SongSection(title = stringResource(R.string.trending), songs = uiState.trendingSongs, onSongClick = onSongClick) }
+            item { 
+                SongSection(
+                    title = stringResource(R.string.new_releases), 
+                    songs = uiState.newestSongs, 
+                    onSongClick = onSongClick,
+                    onSeeAllClick = { onSeeAllClick("New Releases") }
+                ) 
+            }
+            item { 
+                SongSection(
+                    title = stringResource(R.string.trending), 
+                    songs = uiState.trendingSongs, 
+                    onSongClick = onSongClick,
+                    onSeeAllClick = { onSeeAllClick("Trending") }
+                ) 
+            }
 
             // Local Music Section
             val localSongs = uiState.trendingSongs.filter { it.id.startsWith("local_") }
             if (localSongs.isNotEmpty()) {
                 item {
-                    SongSection(title = "My Local Music", songs = localSongs, onSongClick = onSongClick)
+                    SongSection(
+                        title = "My Local Music", 
+                        songs = localSongs, 
+                        onSongClick = onSongClick,
+                        onSeeAllClick = { onSeeAllClick("My Local Music") }
+                    )
                 }
             }
         }
@@ -129,9 +147,32 @@ fun QuickActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun SongSection(title: String, songs: List<Song>, onSongClick: (Song) -> Unit) {
+fun SongSection(
+    title: String, 
+    songs: List<Song>, 
+    onSongClick: (Song) -> Unit,
+    onSeeAllClick: () -> Unit
+) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(text = title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clickable { onSeeAllClick() },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title, 
+                style = MaterialTheme.typography.headlineSmall, 
+                fontWeight = FontWeight.Bold
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "See All",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(songs) { song -> SongItem(song = song, onClick = { onSongClick(song) }) }
         }

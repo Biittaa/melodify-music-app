@@ -1,4 +1,4 @@
-package com.melodify.musicapp.feature.recent
+package com.melodify.musicapp.feature.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,17 +16,25 @@ import com.melodify.musicapp.feature.search.SearchResultItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecentSongsScreen(
+fun SongListScreen(
+    title: String,
     onBackClick: () -> Unit,
     onSongClick: (Song) -> Unit,
-    viewModel: RecentSongsViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    val songs = when (title) {
+        "Trending" -> uiState.trendingSongs
+        "New Releases" -> uiState.newestSongs
+        "My Local Music" -> uiState.trendingSongs.filter { it.id.startsWith("local_") }
+        else -> uiState.popularSongs
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Recently Played", fontWeight = FontWeight.Bold) },
+                title = { Text(title, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -36,22 +43,12 @@ fun RecentSongsScreen(
             )
         }
     ) { padding ->
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (uiState.songs.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text(text = "No recently played songs", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                items(uiState.songs) { song ->
-                    SearchResultItem(song = song, onClick = { onSongClick(song) })
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            items(songs) { song ->
+                SearchResultItem(song = song, onClick = { onSongClick(song) })
             }
         }
     }

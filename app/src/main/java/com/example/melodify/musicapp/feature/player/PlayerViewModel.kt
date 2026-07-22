@@ -11,6 +11,7 @@ import com.melodify.musicapp.domain.repository.ChatRepository
 import com.melodify.musicapp.domain.repository.DownloadRepository
 import com.melodify.musicapp.domain.repository.PlayerRepository
 import com.melodify.musicapp.domain.repository.UserRepository
+import com.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -22,7 +23,8 @@ class PlayerViewModel @Inject constructor(
     private val downloadRepository: DownloadRepository,
     private val userRepository: UserRepository,
     private val chatRepository: ChatRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val songRepository: SongRepository
 ) : ViewModel() {
 
     val playerState: StateFlow<PlayerState> = playerRepository.playerState()
@@ -37,6 +39,9 @@ class PlayerViewModel @Inject constructor(
 
     fun playSong(song: Song) {
         playerRepository.play(song)
+        viewModelScope.launch {
+            songRepository.recordSongPlay(song.id)
+        }
     }
 
     fun pauseResume() {
@@ -56,6 +61,16 @@ class PlayerViewModel @Inject constructor(
     fun setSleepTimer(minutes: Int) = playerRepository.setSleepTimer(minutes)
     fun toggleShuffle() = playerRepository.toggleShuffle()
     fun setRepeatMode(mode: Int) = playerRepository.setRepeatMode(mode)
+
+    fun toggleLike(song: Song) {
+        viewModelScope.launch {
+            if (song.isLiked) {
+                songRepository.unlikeSong(song.id)
+            } else {
+                songRepository.likeSong(song.id)
+            }
+        }
+    }
 
     // WorkManager download wrapper
     fun downloadSong(songId: String, onResult: (String) -> Unit) {

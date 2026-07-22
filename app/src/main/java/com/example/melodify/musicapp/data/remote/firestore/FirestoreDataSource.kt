@@ -168,15 +168,6 @@ class FirestoreDataSource @Inject constructor(
             .toObject<Song>()
     }
 
-//    suspend fun searchSongs(query: String): List<Song> {
-//        return firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
-//            .whereArrayContains("searchKeywords", query.lowercase())
-//            .get()
-//            .await()
-//            .documents
-//            .mapNotNull { it.toObject<Song>() }
-//    }
-
     suspend fun likeSong(userId: String, songId: String) {
         val likeData = mapOf(
             "userId" to userId,
@@ -194,6 +185,23 @@ class FirestoreDataSource @Inject constructor(
             .whereEqualTo("songId", songId)
         val snapshot = query.get().await()
         snapshot.documents.forEach { it.reference.delete().await() }
+    }
+
+    suspend fun recordSongPlay(userId: String, songId: String) {
+        val playData = mapOf(
+            "userId" to userId,
+            "songId" to songId,
+            "playedAt" to FieldValue.serverTimestamp()
+        )
+        firestore.collection("recently_played")
+            .add(playData)
+            .await()
+            
+        // Also increment playCount on the song
+        firestore.collection(Constants.FIREBASE_SONGS_COLLECTION)
+            .document(songId)
+            .update("playCount", FieldValue.increment(1))
+            .await()
     }
 
     // ==================== Playlists ====================
