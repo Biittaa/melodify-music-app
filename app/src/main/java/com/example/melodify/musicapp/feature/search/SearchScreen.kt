@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -40,7 +41,8 @@ import com.melodify.musicapp.domain.model.User
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel(),
-    onSongClick: (Song) -> Unit
+    onSongClick: (Song) -> Unit,
+    onUserClick: (User) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
@@ -86,7 +88,7 @@ fun SearchScreen(
                 if (uiState.localSongs.isNotEmpty()) {
                     item {
                         Text(
-                            text = "My Local Music",
+                            text = stringResource(R.string.my_local_music),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -98,7 +100,7 @@ fun SearchScreen(
                 }
             }
         } else {
-            SearchResultsList(searchResults, onSongClick)
+            SearchResultsList(searchResults, onSongClick, onUserClick = onUserClick)
         }
     }
 }
@@ -130,7 +132,8 @@ fun SearchScreen(
 @Composable
 fun SearchResultsList(
     results: LazyPagingItems<SearchResult>,
-    onSongClick: (Song) -> Unit
+    onSongClick: (Song) -> Unit,
+    onUserClick: (User) -> Unit
 ) {
 
     LazyColumn(
@@ -155,7 +158,8 @@ fun SearchResultsList(
 
                 is SearchResult.UserResult -> {
                     UserSearchItem(
-                        user = item.user
+                        user = item.user,
+                        onUserClick = onUserClick
                     )
                 }
 
@@ -187,16 +191,25 @@ fun SearchResultsList(
 
 @Composable
 fun UserSearchItem(
-    user: User
+    user: User,
+    onUserClick: (User) -> Unit
 ){
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onUserClick(user) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-
+        AsyncImage(
+            model = user.profileImage.ifEmpty { "https://www.w3schools.com/howto/img_avatar.png" },
+            contentDescription = null,
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
 //        AsyncImage(
 //            model = user.avatarUrl,
 //            contentDescription = null,
@@ -272,8 +285,11 @@ fun SearchHistorySection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Recent Searches", fontWeight = FontWeight.Bold)
-            TextButton(onClick = onClearHistory) { Text(text = "Clear All") }
+//            Text(text = "Recent Searches", fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.recent_searches), fontWeight = FontWeight.Bold)
+//            TextButton(onClick = onClearHistory) { Text(text = "Clear All") }
+            TextButton(onClick = onClearHistory) { Text(text = stringResource(R.string.clear_all)) }
+
         }
 
         // Changed from LazyColumn to a regular Column with forEach

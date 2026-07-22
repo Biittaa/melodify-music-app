@@ -42,5 +42,11 @@
     <string name="filter_artists">هنرمندان</string>
     <string name="filter_users">کاربران</string>
 
+    <string name="recent_searches">جستجوهای اخیر</string>
+    <string name="clear_all">پاک کردن همه</string>
+
+    <string name="my_local_music">موسیقی‌های حافظه گوشی</string>
+    <string name="user_label">کاربر</string>
+
 
 </resources>

@@ -23,6 +23,7 @@ import dagger.hilt.components.SingletonComponent
 import java.io.File
 import javax.inject.Singleton
 import com.google.android.exoplayer2.upstream.DefaultDataSource
+import com.melodify.musicapp.core.common.InMemoryUserStore
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -86,5 +87,10 @@ abstract class CoreModule {
         @Singleton
         fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
             WorkManager.getInstance(context)
+
+
+        @Provides
+        @Singleton
+        fun provideInMemoryUserStore(): InMemoryUserStore = InMemoryUserStore()
     }
 }

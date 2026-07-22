@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.R
+import com.melodify.musicapp.ui.components.ImageViewerDialog
 import com.melodify.musicapp.ui.theme.PremiumGold
 
 
@@ -38,6 +39,12 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val user = uiState.user
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile()
+    }
+    var showImageDialog by remember { mutableStateOf(false) }
+    var selectedImageUrl by remember { mutableStateOf("") }
     
     var showEditDialog by remember { mutableStateOf(false) }
     
@@ -56,6 +63,12 @@ fun ProfileScreen(
                 viewModel.updateProfile(name, bio)
                 showEditDialog = false
             }
+        )
+    }
+    if (showImageDialog && selectedImageUrl.isNotEmpty()) {
+        ImageViewerDialog(
+            imageUrl = selectedImageUrl,
+            onDismiss = { showImageDialog = false }
         )
     }
     // فقط بخش تغییر یافته را نمایش می‌دهیم (در جای مناسب)
@@ -98,7 +111,15 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar
-            Box(contentAlignment = Alignment.BottomEnd) {
+            Box(
+                modifier = Modifier
+                    .clickable {
+                        user?.profileImage?.takeIf { it.isNotEmpty() }?.let {
+                            selectedImageUrl = it
+                            showImageDialog = true
+                        }
+                    }
+            ) {
                 AsyncImage(
                     model = user?.profileImage?.takeIf { it.isNotEmpty() } ?: "https://www.w3schools.com/howto/img_avatar.png",
                     contentDescription = null,
@@ -109,13 +130,20 @@ fun ProfileScreen(
                         .clickable { photoPickerLauncher.launch("image/*") },
                     contentScale = ContentScale.Crop
                 )
+//                Surface(
+//                    modifier = Modifier
+//                        .size(32.dp)
+//                        .clip(CircleShape)
+//                        .clickable { photoPickerLauncher.launch("image/*") },
+//                    color = MaterialTheme.colorScheme.primary
+//                )
                 Surface(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .clickable { photoPickerLauncher.launch("image/*") },
+                        .align(Alignment.BottomEnd),
                     color = MaterialTheme.colorScheme.primary
-                ) {
+                ){
                     Icon(
                         imageVector = Icons.Default.CameraAlt,
                         contentDescription = null,

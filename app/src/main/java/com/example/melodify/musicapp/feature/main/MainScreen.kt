@@ -21,8 +21,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
+import com.melodify.musicapp.feature.profile.OtherUserProfileScreen
 import com.melodify.musicapp.R
 
 
@@ -64,6 +67,9 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object LikedSongs : Screen("liked_songs", R.string.liked_songs)
     object Artists : Screen("artists", R.string.top_artists, Icons.Default.Person)  // <-- تغییر نام به Artists
     object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History) // <-- جدید
+
+    object OtherUserProfile : Screen("other_user_profile/{userId}")
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,13 +86,13 @@ fun MainScreen(
     val profileUiState by profileViewModel.uiState.collectAsState()
     var showNowPlaying by remember { mutableStateOf(false) }
 
-//    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
-//        if (!profileUiState.isLoading && profileUiState.user == null) {
-//            navController.navigate(Screen.Login.route) {
-//                popUpTo(0) { inclusive = true }
-//            }
-//        }
-//    }
+    LaunchedEffect(profileUiState.user, profileUiState.isLoading) {
+        if (!profileUiState.isLoading && profileUiState.user == null) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -200,11 +206,43 @@ fun MainScreen(
                         }
                     )
                 }
+//                composable(Screen.Search.route) {
+//                    SearchScreen(onSongClick = { song: Song ->
+//                        playerViewModel.playSong(song)
+//                        showNowPlaying = true
+//                    })
+//                }
                 composable(Screen.Search.route) {
-                    SearchScreen(onSongClick = { song: Song ->
-                        playerViewModel.playSong(song)
-                        showNowPlaying = true
-                    })
+                    SearchScreen(
+                        onSongClick = { song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        },
+                        onUserClick = { user ->
+                            navController.navigate("other_user_profile/${user.id}")
+                        }
+                    )
+                }
+                composable(Screen.Profile.route) {
+                    ProfileScreen(
+                        onSettingsClick = { navController.navigate(Screen.Settings.route) },
+                        onLogoutClick = {
+                            profileViewModel.logout()
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+                composable(
+                    route = Screen.OtherUserProfile.route,
+                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    OtherUserProfileScreen(
+                        userId = userId,
+                        onBackClick = { navController.popBackStack() }
+                    )
                 }
                 composable(Screen.Downloads.route) {
                     DownloadsScreen(onSongClick = { song: Song ->
@@ -277,7 +315,17 @@ fun MainScreen(
                         }
                     )
                 }
-            }
+
+                composable("other_user_profile/{userId}") { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    OtherUserProfileScreen(
+                        userId = userId,
+                        onBackClick = {
+                            navController.popBackStack()
+                            // ❗ بعد از برگشت، پروفایل خودت را ریلود کن
+                        }
+                    )
+            }}
         }
 
         AnimatedVisibility(

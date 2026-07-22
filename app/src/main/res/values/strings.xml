@@ -41,4 +41,11 @@
     <string name="filter_artists">Artists</string>
     <string name="filter_users">Users</string>
 
+    <string name="recent_searches">Recent Searches</string>
+    <string name="clear_all">Clear All</string>
+
+    <string name="my_local_music">My Local Music</string>
+    <string name="user_label">User</string>
+
+
 </resources>

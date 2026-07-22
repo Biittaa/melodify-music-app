@@ -33,8 +33,7 @@ class ProfileViewModel @Inject constructor(
     init {
         loadProfile()
     }
-
-    private fun loadProfile() {
+    fun loadProfile() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -46,15 +45,50 @@ class ProfileViewModel @Inject constructor(
                     } catch (e: Exception) {
                         currentUser
                     }
-                    _uiState.update { it.copy(user = user, isPremium = isPremium, isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            user = user,
+                            isPremium = isPremium,
+                            isLoading = false
+                        )
+                    }
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message
+                    )
+                }
             }
         }
     }
+
+
+//    private fun loadProfile() {
+//        viewModelScope.launch {
+//            _uiState.update { it.copy(isLoading = true) }
+//            try {
+//                val isPremium = settingsRepository.getPremium()
+//                val currentUser = authRepository.getCurrentUser()
+//                if (currentUser != null) {
+//                    val user = try {
+//                        userRepository.getProfile(currentUser.id)
+//                    } catch (e: Exception) {
+//                        currentUser
+//                    }
+//                    _uiState.update { it.copy(user = user, isPremium = isPremium, isLoading = false) }
+//                } else {
+//                    _uiState.update { it.copy(isLoading = false) }
+//                }
+//            } catch (e: Exception) {
+//                _uiState.update { it.copy(isLoading = false, error = e.message) }
+//            }
+//        }
+//    }
+
 
     fun updateProfile(fullName: String, bio: String) {
         viewModelScope.launch {

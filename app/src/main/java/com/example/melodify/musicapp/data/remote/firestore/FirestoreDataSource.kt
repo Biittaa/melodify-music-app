@@ -1,5 +1,6 @@
 package com.melodify.musicapp.data.remote.firestore
 
+import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -32,13 +33,13 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
-    suspend fun getUser(userId: String): User? {
-        return firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
-            .document(userId)
-            .get()
-            .await()
-            .toObject<User>()
-    }
+//    suspend fun getUser(userId: String): User? {
+//        return firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+//            .document(userId)
+//            .get()
+//            .await()
+//            .toObject<User>()
+//    }
 
     suspend fun searchUsers(query:String):List<User>{
 
@@ -339,5 +340,18 @@ class FirestoreDataSource @Inject constructor(
             .document(docId)
             .set(mapOf(userId to isTyping), com.google.firebase.firestore.SetOptions.merge())
             .await()
+    }
+
+    suspend fun getUser(userId: String): User? {
+        return try {
+            firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+                .document(userId)
+                .get()
+                .await()
+                .toObject(User::class.java)  // ✅ این باید User::class.java باشد
+        } catch (e: Exception) {
+            Log.e("FirestoreDataSource", "Error getting user: ${e.message}")
+            null
+        }
     }
 }
