@@ -16,9 +16,9 @@ class UserRepositoryImpl @Inject constructor(
     private val currentUserProvider: CurrentUserProvider
 ) : UserRepository {
 
-    override suspend fun getProfile(userId: String): User {
-        return firestoreDataSource.getUser(userId) ?: throw Exception("User not found")
-    }
+//    override suspend fun getProfile(userId: String): User {
+//        return firestoreDataSource.getUser(userId) ?: throw Exception("User not found")
+//    }
 
     override suspend fun updateProfile(user: User) {
         firestoreDataSource.updateUser(user)
@@ -33,6 +33,7 @@ class UserRepositoryImpl @Inject constructor(
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return
         firestoreDataSource.unfollowUser(currentUserId, userId)
     }
+
 
     override suspend fun getUserFollowers(userId: String): List<User> {
         return firestoreDataSource.getFollowers(userId)
@@ -63,7 +64,26 @@ class UserRepositoryImpl @Inject constructor(
 
         return (local + remote + mock)
             .distinctBy { it.id }
-    }}
+    }
+    override suspend fun getProfile(userId: String): User {
+        Log.d("UserRepository", "Getting profile for userId: $userId")
+
+        // ابتدا از Firestore تلاش کنید
+        val userFromFirestore = try {
+            firestoreDataSource.getUser(userId)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error fetching from Firestore", e)
+            null
+        }
+
+        // اگر در Firestore پیدا نشد، از MockData استفاده کنید
+        return userFromFirestore ?: run {
+            Log.d("UserRepository", "User not found in Firestore, using mock data")
+            UserMockData.users.find { it.id == userId }
+                ?: throw Exception("User not found")
+        }
+    }
+}
 
 
 

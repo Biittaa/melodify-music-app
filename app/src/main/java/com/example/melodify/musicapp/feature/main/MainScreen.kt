@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.melodify.musicapp.R
 
@@ -48,6 +50,7 @@ import com.melodify.musicapp.feature.liked_songs.LikedSongsScreen
 import com.melodify.musicapp.feature.profile.ProfileViewModel
 import com.melodify.musicapp.feature.player.PlayerViewModel
 import com.melodify.musicapp.feature.artist.ArtistScreen
+import com.melodify.musicapp.feature.profile.OtherUserProfileScreen
 import com.melodify.musicapp.feature.recent.RecentSongsScreen   // <-- صفحه جدید
 
 sealed class Screen(val route: String, val labelRes: Int? = null, val icon: ImageVector? = null) {
@@ -62,8 +65,11 @@ sealed class Screen(val route: String, val labelRes: Int? = null, val icon: Imag
     object Register : Screen("register")
     object PlaylistDetail : Screen("playlist_detail/{playlistId}")
     object LikedSongs : Screen("liked_songs", R.string.liked_songs)
-    object Artists : Screen("artists", R.string.top_artists, Icons.Default.Person)  // <-- تغییر نام به Artists
-    object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History) // <-- جدید
+    object Artists : Screen("artists", R.string.top_artists, Icons.Default.Person)
+    object RecentSongs : Screen("recent_songs", R.string.recently_played, Icons.Default.History)
+
+//    object OtherUserProfile : Screen("other_user_profile/{userId}")
+    object OtherUserProfile : Screen("other_user_profile/{userId}?userId={userId}")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -201,10 +207,40 @@ fun MainScreen(
                     )
                 }
                 composable(Screen.Search.route) {
-                    SearchScreen(onSongClick = { song: Song ->
-                        playerViewModel.playSong(song)
-                        showNowPlaying = true
-                    })
+                    SearchScreen(
+                        onSongClick = { song ->
+                            playerViewModel.playSong(song)
+                            showNowPlaying = true
+                        },
+                        onUserClick = { user ->
+                            navController.navigate("other_user_profile/${user.id}")
+                        }
+                    )
+                }
+                composable(
+                    route = Screen.OtherUserProfile.route,
+                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    OtherUserProfileScreen(
+                        userId = userId,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "other_user_profile/{userId}",
+                    arguments = listOf(
+                        navArgument("userId") {
+                            type = NavType.StringType
+                            nullable = false
+                        }
+                    )
+                ) { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    OtherUserProfileScreen(
+                        userId = userId,
+                        onBackClick = { navController.popBackStack() }
+                    )
                 }
                 composable(Screen.Downloads.route) {
                     DownloadsScreen(onSongClick = { song: Song ->
