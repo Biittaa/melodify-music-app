@@ -4,14 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.example.melodify.musicapp.domain.model.SearchResult
-import com.melodify.musicapp.domain.model.SearchHistory
 import com.melodify.musicapp.domain.model.SearchFilter
+import com.melodify.musicapp.domain.model.SearchHistory
+import com.example.melodify.musicapp.domain.model.SearchResult
+import com.melodify.musicapp.domain.model.Song
+import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.SearchRepository
 import com.melodify.musicapp.domain.repository.SongRepository
 import com.melodify.musicapp.domain.repository.UserRepository
-import com.melodify.musicapp.domain.model.User
-import com.melodify.musicapp.domain.model.Song
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -21,10 +21,11 @@ import javax.inject.Inject
 
 data class SearchUiState(
     val query: String = "",
-    val history: List<SearchHistory> = emptyList(),
     val selectedFilter: SearchFilter = SearchFilter.All,
+    val history: List<SearchHistory> = emptyList(),
     val localSongs: List<Song> = emptyList(),
-    val totalCount: Int = 0
+    val totalCount: Int = 0,
+    val isLoading: Boolean = false
 )
 
 @HiltViewModel
@@ -37,108 +38,93 @@ class SearchViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    private val _selectedFilter = MutableStateFlow(SearchFilter.All)
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    val searchResults: Flow<PagingData<SearchResult>> = _uiState
+        .map { it.query to it.selectedFilter }
+        .distinctUntilChanged()
+        .debounce(300L)
+        .flatMapLatest { (query, filter) ->
+            if (query.isBlank()) {
+                flowOf(PagingData.empty())
+            } else {
+                flow {
+                    val resultsList = mutableListOf<SearchResult>()
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val searchResults: Flow<PagingData<SearchResult>> =
-        combine(
-            _searchQuery.debounce(500),
-            _selectedFilter
-        ) { query, filter ->
-            query to filter
-        }
-            .flatMapLatest { (query, filter) ->
-                if(query.isBlank()) {
-                    _uiState.update { it.copy(totalCount = 0) }
-                    flowOf(PagingData.empty())
-                } else {
-                    flow {
-                        val finalResults = mutableListOf<SearchResult>()
-                        
-                        when(filter) {
-                            SearchFilter.All -> {
-                                val songs = songRepository.searchSongs(query)
-                                val users = userRepository.searchUsers(query)
-                                
-                                if (songs.isNotEmpty()) {
-                                    finalResults.add(SearchResult.Header("Songs"))
-                                    addSongGroup(finalResults, songs)
-                                }
-                                
-                                if (users.isNotEmpty()) {
-                                    finalResults.add(SearchResult.Header("Users"))
-                                    finalResults.addAll(users.map { SearchResult.UserResult(it) })
-                                }
-                                _uiState.update { it.copy(totalCount = songs.size + users.size) }
+                    when (filter) {
+                        SearchFilter.All -> {
+                            val songs = songRepository.searchSongs(query)
+                            val users = userRepository.searchUsers(query)
+
+                            if (songs.isNotEmpty()) {
+                                resultsList.add(SearchResult.Header("Songs"))
+                                resultsList.addAll(songs.map { SearchResult.SongResult(it) })
                             }
-                            SearchFilter.Songs -> {
-                                val songs = songRepository.searchSongs(query)
-                                addSongGroup(finalResults, songs)
-                                _uiState.update { it.copy(totalCount = songs.size) }
-                            }
-                            SearchFilter.Users, SearchFilter.Artists -> {
-                                val users = userRepository.searchUsers(query)
-                                finalResults.addAll(users.map { SearchResult.UserResult(it) })
-                                _uiState.update { it.copy(totalCount = users.size) }
+                            if (users.isNotEmpty()) {
+                                resultsList.add(SearchResult.Header("Users"))
+                                resultsList.addAll(users.map { SearchResult.UserResult(it) })
                             }
                         }
-                        emit(PagingData.from(finalResults))
+                        SearchFilter.Songs -> {
+                            val songs = songRepository.searchSongs(query)
+                            if (songs.isNotEmpty()) {
+                                resultsList.add(SearchResult.Header("Songs"))
+                                resultsList.addAll(songs.map { SearchResult.SongResult(it) })
+                            }
+                        }
+                        SearchFilter.Artists -> {
+                            val songs = songRepository.searchSongs(query)
+                            if (songs.isNotEmpty()) {
+                                resultsList.add(SearchResult.Header("Artists"))
+                                resultsList.addAll(songs.map { SearchResult.SongResult(it) })
+                            }
+                        }
+                        SearchFilter.Users -> {
+                            val users = userRepository.searchUsers(query)
+                            if (users.isNotEmpty()) {
+                                resultsList.add(SearchResult.Header("Users"))
+                                resultsList.addAll(users.map { SearchResult.UserResult(it) })
+                            }
+                        }
                     }
+
+                    _uiState.update {
+                        it.copy(totalCount = resultsList.filterNot { item -> item is SearchResult.Header }.size)
+                    }
+
+                    if (query.isNotBlank()) {
+                        searchRepository.saveHistory(query)
+                    }
+
+                    emit(PagingData.from(resultsList))
                 }
             }
-            .cachedIn(viewModelScope)
-
-    private fun addSongGroup(results: MutableList<SearchResult>, songs: List<Song>) {
-        val localSongs = songs.filter { it.id.startsWith("local_") }
-        val otherSongs = songs.filter { !it.id.startsWith("local_") }
-        
-        if (localSongs.isNotEmpty()) {
-            results.add(SearchResult.Header("Local"))
-            results.addAll(localSongs.map { SearchResult.SongResult(it) })
         }
-        if (otherSongs.isNotEmpty()) {
-            results.add(SearchResult.Header("Others"))
-            results.addAll(otherSongs.map { SearchResult.SongResult(it) })
-        }
-    }
+        .cachedIn(viewModelScope)
 
     init {
-        loadHistory()
-        loadLocalSongs()
+        loadHistoryAndLocal()
     }
 
-    private fun loadLocalSongs() {
+    private fun loadHistoryAndLocal() {
         viewModelScope.launch {
-            val songs = songRepository.getLocalMusic()
-            _uiState.update { it.copy(localSongs = songs) }
+            val historyList = searchRepository.getHistory()
+            val local = songRepository.getLocalMusic()
+            _uiState.update { it.copy(history = historyList, localSongs = local) }
         }
     }
 
-    fun onQueryChange(query: String) {
-        _searchQuery.value = query
-        _uiState.update { it.copy(query = query) }
-        if (query.isNotBlank()) {
-            viewModelScope.launch { searchRepository.saveHistory(query) }
-        }
+    fun onQueryChange(newQuery: String) {
+        _uiState.update { it.copy(query = newQuery) }
     }
 
-    fun onFilterChange(filter: SearchFilter) {
-        _selectedFilter.value = filter
-        _uiState.update { it.copy(selectedFilter = filter) }
-    }
-
-    private fun loadHistory() {
-        viewModelScope.launch {
-            val history = searchRepository.getHistory()
-            _uiState.update { it.copy(history = history) }
-        }
+    fun onFilterChange(newFilter: SearchFilter) {
+        _uiState.update { it.copy(selectedFilter = newFilter) }
     }
 
     fun clearHistory() {
         viewModelScope.launch {
             searchRepository.clearHistory()
-            loadHistory()
+            _uiState.update { it.copy(history = emptyList()) }
         }
     }
 }

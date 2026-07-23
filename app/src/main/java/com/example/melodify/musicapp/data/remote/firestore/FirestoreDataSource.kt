@@ -14,6 +14,7 @@ import javax.inject.Singleton
 
 // Standard Namespace Imports
 import com.melodify.musicapp.core.common.Constants
+import com.melodify.musicapp.domain.model.Artist
 import com.melodify.musicapp.domain.model.Message
 import com.melodify.musicapp.domain.model.Playlist
 import com.melodify.musicapp.domain.model.Song
@@ -460,6 +461,19 @@ class FirestoreDataSource @Inject constructor(
         } catch (e: Exception) {
             Log.e("FirestoreDataSource", "Error searching users in Firebase", e)
             emptyList()
+        }
+    }
+
+    suspend fun searchArtists(query: String): List<Artist> {
+        val q = query.lowercase()
+        val snapshot = firestore.collection(Constants.FIREBASE_ARTISTS_COLLECTION)
+            .whereGreaterThanOrEqualTo("nameSearch", q)
+            .whereLessThanOrEqualTo("nameSearch", q + "\uf8ff")
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Artist::class.java)
         }
     }
 }
