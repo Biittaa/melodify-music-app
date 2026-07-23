@@ -19,4 +19,5 @@ interface ChatRepository {
     // Live DM typing contract
     fun observeTypingStatus(otherUserId: String): Flow<Boolean>
     suspend fun setTypingStatus(otherUserId: String, isTyping: Boolean)
+    suspend fun markConversationAsRead(userId: String)
 }

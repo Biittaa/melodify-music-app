@@ -93,10 +93,9 @@ class ChatRepositoryImpl @Inject constructor(
             songId = null,
             createdAt = System.currentTimeMillis(),
             isSeen = false,
-            isSent = false // Start local with 'sending/clock' status
+            isSent = false
         )
 
-        // Save local immediately in sending state
         messageDao.insert(
             MessageEntity(
                 id = message.id,
@@ -114,7 +113,6 @@ class ChatRepositoryImpl @Inject constructor(
 
         try {
             firestoreDataSource.sendMessage(message)
-            // Update local to 'sent'
             messageDao.insert(
                 MessageEntity(
                     id = message.id,
@@ -167,6 +165,13 @@ class ChatRepositoryImpl @Inject constructor(
         messageDao.markAsSeen(messageId)
     }
 
+    override suspend fun markConversationAsRead(userId: String) {
+        val conv = conversationDao.getAll().firstOrNull()?.find { it.userId == userId }
+        if (conv != null) {
+            conversationDao.insert(conv.copy(unreadCount = 0))
+        }
+    }
+
     override fun observeMessages(userId: String): Flow<List<Message>> {
         val currentUserId = currentUserProvider.getCurrentUser()?.id ?: return emptyFlow()
         return messageDao.getMessagesForUser(userId, currentUserId).map { entities ->
@@ -206,6 +211,7 @@ class ChatRepositoryImpl @Inject constructor(
         conversationDao.insert(conv)
     }
 
+    // ---------- Inner class for empty paging source ----------
     private class EmptyPagingSource : PagingSource<Int, MessageEntity>() {
         override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MessageEntity> {
             return LoadResult.Page(emptyList(), null, null)

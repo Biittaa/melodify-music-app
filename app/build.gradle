@@ -1,30 +1,22 @@
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
     id 'com.google.gms.google-services'
 }
 
 android {
-    namespace 'com.melodify.musicapp'
+    namespace "com.melodify.musicapp"
     compileSdk 34
 
     defaultConfig {
         applicationId "com.melodify.musicapp"
-        minSdk 26
+        minSdk 21
         targetSdk 34
         versionCode 1
-        versionName "1.0.0"
-
+        versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
     }
 
     compileOptions {
@@ -36,108 +28,89 @@ android {
         jvmTarget = '17'
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
     buildFeatures {
         compose true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion compose_compiler_version
-    }
-
-    packaging {
+    packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
-            excludes += '/META-INF/gradle/incremental.annotation.processors'
         }
     }
 }
-def lifecycleVersion = "2.6.1"
+
 dependencies {
-    // -------------------- Core Android & Material --------------------
+    // ---------- Compose (BOM) ----------
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.runtime
+    implementation libs.androidx.compose.animation
+
+    // ---------- Material Icons Extended (fixes icons) ----------
+    implementation libs.androidx.compose.material.icons.extended
+
+    // ---------- AndroidX ----------
     implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.compose
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.navigation.compose
+    implementation libs.androidx.transition
+
+    // ---------- Room ----------
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    kapt libs.androidx.room.compiler
+
+    // ---------- WorkManager ----------
+    implementation libs.androidx.work.runtime.ktx
+
+    // ---------- ExoPlayer & MediaSession ----------
+    implementation libs.com.google.exoplayer.core
+    implementation libs.com.google.exoplayer.mediasession
+    implementation libs.com.google.exoplayer.ui
+
+    // ---------- Coil ----------
+    implementation "io.coil-kt:coil-compose:2.5.0"
+
+    // ---------- Hilt ----------
+    implementation libs.dagger.hilt.android
+    kapt libs.dagger.hilt.android.compiler
+
+    // ---------- Hilt Navigation Compose (fixes hiltViewModel) ----------
+    implementation libs.androidx.hilt.navigation.compose
+
+    // ---------- Paging ----------
+    implementation libs.androidx.paging.compose
+
+    // ---------- DataStore Preferences (fixes Preferences, DataStore) ----------
+    implementation libs.androidx.datastore.preferences
+
+    // ---------- Palette (fixes Palette) ----------
+    implementation libs.androidx.palette
+
+    // ---------- Firebase ----------
+    implementation libs.google.firebase.auth
+    implementation libs.google.firebase.firestore
+    implementation libs.google.firebase.storage
+
+    // ---------- Material Components (fixes theme errors) ----------
     implementation libs.androidx.appcompat
     implementation libs.material
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
-    implementation "androidx.activity:activity-compose:$activity_compose_version"
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
-    // -------------------- Compose --------------------
-    implementation platform("androidx.compose:compose-bom:$compose_version")
-    implementation "androidx.compose.ui:ui"
-    implementation "androidx.compose.ui:ui-graphics"
-    implementation "androidx.compose.ui:ui-tooling-preview"
-    implementation "androidx.compose.material3:material3"
-    implementation "androidx.compose.material:material-icons-extended"
 
-    // Compose Navigation
-    implementation "androidx.navigation:navigation-compose:$navigation_compose_version"
-    implementation "androidx.compose.runtime:runtime"
-
-    // Debug Compose
-    debugImplementation "androidx.compose.ui:ui-tooling"
-    debugImplementation "androidx.compose.ui:ui-test-manifest"
-
-    // -------------------- Dependency Injection (Hilt) --------------------
-    implementation "com.google.dagger:hilt-android:$hilt_version"
-    kapt "com.google.dagger:hilt-compiler:$hilt_version"
-    implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
-
-    // -------------------- Firebase --------------------
-    implementation platform("com.google.firebase:firebase-bom:$firebase_bom_version")
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.android.gms:play-services-auth:20.5.0'
-
-    // -------------------- Room Database --------------------
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
-    implementation "androidx.room:room-paging:$room_version"
-
-    // -------------------- DataStore --------------------
-    implementation "androidx.datastore:datastore-preferences:$datastore_version"
-
-    // -------------------- Paging 3 --------------------
-    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
-    implementation "androidx.paging:paging-compose:3.2.1"
-
-    // -------------------- Coroutines --------------------
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutines_version"
-
-    // -------------------- ExoPlayer (Media Playback) --------------------
-    implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
-    implementation "com.google.android.exoplayer:extension-mediasession:$exoplayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-hls:$exoplayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-dash:$exoplayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:$exoplayer_version"
-
-    implementation "androidx.media:media:1.6.0"
-
-    // -------------------- WorkManager --------------------
-    implementation "androidx.work:work-runtime-ktx:$work_version"
-
-    // -------------------- Image Loading (Coil) --------------------
-    implementation "io.coil-kt:coil-compose:$coil_version"
-
-    // -------------------- Accompanist --------------------
-    implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist_version"
-    implementation "com.google.accompanist:accompanist-permissions:$accompanist_version"
-    implementation "com.google.accompanist:accompanist-navigation-animation:$accompanist_version"
-
-    // -------------------- Palette API --------------------
-    implementation "androidx.palette:palette-ktx:1.0.0"
-
-    // -------------------- Testing --------------------
+    // ---------- Testing ----------
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+    debugImplementation libs.androidx.compose.ui.tooling
 }
 
 kapt {
-    correctErrorTypes = true
+    correctErrorTypes true
 }

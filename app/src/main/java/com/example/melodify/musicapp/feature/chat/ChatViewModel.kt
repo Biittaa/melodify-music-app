@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.domain.model.Conversation
 import com.melodify.musicapp.domain.model.Message
+import com.melodify.musicapp.domain.model.User
 import com.melodify.musicapp.domain.repository.ChatRepository
+import com.melodify.musicapp.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,12 +16,14 @@ import javax.inject.Inject
 data class ChatUiState(
     val conversations: List<Conversation> = emptyList(),
     val messages: List<Message> = emptyList(),
+    val followedUsers: List<User> = emptyList(),
     val isLoading: Boolean = false
 )
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
+    private val userRepository: UserRepository,
     private val currentUserProvider: CurrentUserProvider
 ) : ViewModel() {
 
@@ -30,7 +34,7 @@ class ChatViewModel @Inject constructor(
     val otherUserTyping: StateFlow<Boolean> = _otherUserTyping.asStateFlow()
 
     init {
-        loadConversations()
+        loadFollowedUsers()
     }
 
     fun loadConversations() {
@@ -46,6 +50,11 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             chatRepository.observeMessages(otherUserId).collectLatest { msgs ->
                 _uiState.update { it.copy(messages = msgs) }
+                msgs.filter { !it.isSeen && it.senderId == otherUserId }
+                    .forEach { message ->
+                        chatRepository.markAsRead(message.id)
+                    }
+                chatRepository.markConversationAsRead(otherUserId)
             }
         }
         viewModelScope.launch {
@@ -61,6 +70,7 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    // FIXED: changed viewModelScope.last → viewModelScope.launch
     fun setTypingStatus(receiverId: String, isTyping: Boolean) {
         viewModelScope.launch {
             chatRepository.setTypingStatus(receiverId, isTyping)
@@ -70,6 +80,16 @@ class ChatViewModel @Inject constructor(
     fun sendSong(receiverId: String, songId: String) {
         viewModelScope.launch {
             chatRepository.sendSong(receiverId, songId)
+        }
+    }
+
+    private fun loadFollowedUsers() {
+        viewModelScope.launch {
+            val currentUser = currentUserProvider.getCurrentUser()
+            if (currentUser != null) {
+                val following = userRepository.getUserFollowing(currentUser.id)
+                _uiState.update { it.copy(followedUsers = following) }
+            }
         }
     }
 }
