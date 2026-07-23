@@ -23,7 +23,7 @@ data class ChatUiState(
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val userRepository: UserRepository,
+    val userRepository: UserRepository,
     private val currentUserProvider: CurrentUserProvider
 ) : ViewModel() {
 

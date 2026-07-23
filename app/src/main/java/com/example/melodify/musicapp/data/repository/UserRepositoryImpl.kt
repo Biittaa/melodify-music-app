@@ -133,6 +133,7 @@ class UserRepositoryImpl @Inject constructor(
         val userFromFirestore = try {
             firestoreDataSource.getUser(userId)
         } catch (e: Exception) {
+            Log.e("Profile", "getUser failed", e)
             null
         }
 
@@ -147,14 +148,22 @@ class UserRepositoryImpl @Inject constructor(
         return targetUser.copy(isFollowing = isFollowing)
     }
 
+
+
     override suspend fun follow(userId: String) {
         val currentUserId = currentUserProvider.getCurrentUser()?.id
+//        firestoreDataSource.followUser(currentUserId, userId)
+
 
         // ۱. آپدیت پروفایل کاربر جاری (افزایش Following)
         currentUserProvider.getCurrentUser()?.let { me ->
             val updatedMe = me.copy(followingCount = me.followingCount + 1)
             currentUserProvider.setUser(updatedMe)
         }
+
+//        currentUserProvider.getCurrentUser()?.let { current ->
+//            val updatedUser = current.copy(followingCount = current.followingCount + 1)
+//            currentUserProvider.setCurrentUser(updatedUser)
 
         // ۲. آپدیت دیتابیس Firestore
         if (currentUserId != null) {
@@ -174,6 +183,8 @@ class UserRepositoryImpl @Inject constructor(
                 followersCount = user.followersCount + 1
             )
         }
+
+//        userDao.insertUser(updatedUser.toEntity())
     }
 
     override suspend fun unfollow(userId: String) {

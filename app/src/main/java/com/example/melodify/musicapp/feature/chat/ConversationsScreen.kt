@@ -1,5 +1,6 @@
 package com.melodify.musicapp.feature.chat
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,22 +10,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.*      // <-- this import already includes LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.melodify.musicapp.domain.model.Conversation
+import com.melodify.musicapp.domain.model.User
+import com.melodify.musicapp.domain.repository.UserRepository
 import java.text.SimpleDateFormat
 import java.util.*
-
-// If the above import doesn't provide LaunchedEffect, add this explicitly:
-// import androidx.compose.runtime.LaunchedEffect
+import com.melodify.musicapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +39,6 @@ fun ConversationsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showStartChat by remember { mutableStateOf(false) }
 
-    // LaunchedEffect is now resolved because of the import
     LaunchedEffect(Unit) {
         viewModel.loadConversations()
     }
@@ -63,7 +65,7 @@ fun ConversationsScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.loadFollowedUsers() // لیست کاربران فالوشده را دوباره لود می‌کند
+                        viewModel.loadFollowedUsers() // لیست کاربران فالوشده را لود میکند
                         showStartChat = true
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "New Chat")
@@ -87,6 +89,7 @@ fun ConversationsScreen(
                 items(uiState.conversations) { conversation ->
                     ConversationItem(
                         conversation = conversation,
+                        userRepository = viewModel.userRepository,
                         onClick = { onConversationClick(conversation.userId) }
                     )
                 }
@@ -98,8 +101,28 @@ fun ConversationsScreen(
 @Composable
 fun ConversationItem(
     conversation: Conversation,
+    userRepository: UserRepository, // تایپ دقیق ورودی اضافه شد
     onClick: () -> Unit
 ) {
+    var otherUser by remember { mutableStateOf<User?>(null) }
+
+    // دریافت مشخصات کاربر به صورت suspend (بدون collect)
+    LaunchedEffect(conversation.userId) {
+        try {
+            otherUser = userRepository.getProfile(conversation.userId)
+            Log.d("Chat", "conversation.userId = ${conversation.userId}")
+
+            otherUser = userRepository.getProfile(conversation.userId)
+
+            Log.d("Chat", "otherUser = $otherUser")
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    Log.d("Chat2", "otherUser = $otherUser")
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,24 +131,28 @@ fun ConversationItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = "https://www.w3schools.com/howto/img_avatar.png",
+            model = otherUser?.profileImage?.ifEmpty { "https://www.w3schools.com/howto/img_avatar.png" }
+                ?: "https://www.w3schools.com/howto/img_avatar.png",
             contentDescription = null,
             modifier = Modifier
-                .size(56.dp)
+                .size(52.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+//        Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "User ${conversation.userId.take(8)}",
-                fontWeight = FontWeight.Bold
+                text = otherUser?.fullName ?: stringResource(R.string.unknown_user),
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                color = Color.Gray
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = conversation.lastMessage,
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = 13.sp,
                 color = Color.Gray,
                 maxLines = 1
             )
@@ -141,8 +168,7 @@ fun ConversationItem(
             if (conversation.unreadCount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Badge(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
+                    containerColor = MaterialTheme.colorScheme.error
                 ) {
                     Text(
                         text = conversation.unreadCount.toString(),

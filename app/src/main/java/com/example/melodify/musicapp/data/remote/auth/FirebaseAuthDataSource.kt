@@ -1,6 +1,8 @@
 package com.melodify.musicapp.data.remote.auth
 
 import android.util.Log
+import com.example.melodify.musicapp.data.local.dao.UserDao
+import com.example.melodify.musicapp.data.local.entity.UserEntity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
