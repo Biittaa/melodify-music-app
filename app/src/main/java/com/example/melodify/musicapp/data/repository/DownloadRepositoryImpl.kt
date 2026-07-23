@@ -13,9 +13,12 @@ import com.melodify.musicapp.domain.repository.DownloadRepository
 import com.melodify.musicapp.domain.repository.SettingsRepository
 import com.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -66,12 +69,30 @@ class DownloadRepositoryImpl @Inject constructor(
             ExistingWorkPolicy.KEEP,
             workRequest
         )
+        workManager.getWorkInfoByIdLiveData(workRequest.id).observeForever { info ->
+            if (info?.state == WorkInfo.State.SUCCEEDED) {
+                val path = "${context.filesDir}/songs/$songId.mp3"
+                GlobalScope.launch(Dispatchers.IO) {
+                    downloadedSongDao.insert(
+                        DownloadedSongEntity(
+                            songId,
+                            path,
+                            System.currentTimeMillis()
+                        )
+                    )
+                }
+            }
+        }
 
         return Result.Success(Unit)
     }
 
+//    override suspend fun cancel(songId: String) {
+//        workManager.cancelAllWorkByTag(songId)
+//    }
+
     override suspend fun cancel(songId: String) {
-        workManager.cancelAllWorkByTag(songId)
+        workManager.cancelUniqueWork("dl_$songId")
     }
 
     override suspend fun delete(songId: String) {
@@ -104,4 +125,16 @@ class DownloadRepositoryImpl @Inject constructor(
             }
         }
     }
+    override fun observeActiveDownloads(): Flow<List<Download>> {
+        return workManager.getWorkInfosByTagFlow("download_tag").map { infoList ->
+            infoList.filter { it.state == WorkInfo.State.RUNNING || it.state == WorkInfo.State.ENQUEUED }
+                .map { info ->
+                    val progress = info.progress.getInt("progress", 0)
+                    val title = info.tags.find { it.startsWith("title_") }?.removePrefix("title_") ?: "Music"
+                    val id = info.tags.find { it.startsWith("id_") }?.removePrefix("id_") ?: ""
+                    Download(id,  progress, DownloadStatus.DOWNLOADING)
+                }
+        }
+    }
+
 }

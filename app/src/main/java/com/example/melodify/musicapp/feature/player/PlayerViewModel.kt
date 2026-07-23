@@ -89,14 +89,14 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun downloadSong(songId: String, onResult: (String) -> Unit) {
-        viewModelScope.launch {
-            when (val result = downloadRepository.download(songId)) {
-                is Result.Success -> onResult("Download initiated successfully")
-                is Result.Error -> onResult(result.exception.message ?: "Failed to start download")
-            }
-        }
-    }
+//    fun downloadSong(songId: String, onResult: (String) -> Unit) {
+//        viewModelScope.launch {
+//            when (val result = downloadRepository.download(songId)) {
+//                is Result.Success -> onResult("Download initiated successfully")
+//                is Result.Error -> onResult(result.exception.message ?: "Failed to start download")
+//            }
+//        }
+//    }
 
     private fun loadFriends() {
         viewModelScope.launch {
@@ -110,6 +110,16 @@ class PlayerViewModel @Inject constructor(
     fun shareSongWithFriend(friendId: String, songId: String) {
         viewModelScope.launch {
             chatRepository.sendSong(friendId, songId)
+        }
+    }
+    fun downloadSong(songId: String, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val result = downloadRepository.download(songId)
+            if (result is com.melodify.musicapp.core.common.Result.Success) {
+                onResult("دانلود شروع شد. از صفحه دانلودها پیگیری کنید.")
+            } else {
+                onResult("خطا: اشتراک ویژه ندارید یا آهنگ یافت نشد.")
+            }
         }
     }
 }

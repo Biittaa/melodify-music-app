@@ -40,4 +40,8 @@ interface DownloadRepository {
      * @return Flow emitting list of Download updates
      */
     fun observeDownloads(): Flow<List<Download>>
+
+    fun observeActiveDownloads(): Flow<List<Download>>
+
+
 }
