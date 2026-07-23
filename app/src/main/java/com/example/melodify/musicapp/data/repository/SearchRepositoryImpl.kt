@@ -39,9 +39,13 @@ class SearchRepositoryImpl @Inject constructor(
         return emptyList()
     }
 
+//    override suspend fun searchUsers(query: String): List<User> {
+//        // TODO: Implement user search in Firestore
+//        return emptyList()
+//    }
     override suspend fun searchUsers(query: String): List<User> {
-        // TODO: Implement user search in Firestore
-        return emptyList()
+        // اتصال به فایربیس جهت دریافت لیست کاربران
+        return firestoreDataSource.searchUsers(query)
     }
 
     override suspend fun saveHistory(query: String) {

@@ -235,6 +235,29 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+//    override suspend fun searchUsers(query: String): List<User> {
+//        val remote = try {
+//            firestoreDataSource.searchUsers(query)
+//        } catch (e: Exception) {
+//            emptyList()
+//        }
+//
+//        val matchedLocal = localUsers.filter {
+//            it.username.contains(query, ignoreCase = true) ||
+//                    it.fullName.contains(query, ignoreCase = true)
+//        }
+//
+//        return (remote + matchedLocal).distinctBy { it.id }
+//    }
+
+    override suspend fun updateProfile(user: User) {
+        try {
+            firestoreDataSource.updateUser(user)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Update profile error", e)
+        }
+    }
+
     override suspend fun searchUsers(query: String): List<User> {
         val remote = try {
             firestoreDataSource.searchUsers(query)
@@ -248,13 +271,5 @@ class UserRepositoryImpl @Inject constructor(
         }
 
         return (remote + matchedLocal).distinctBy { it.id }
-    }
-
-    override suspend fun updateProfile(user: User) {
-        try {
-            firestoreDataSource.updateUser(user)
-        } catch (e: Exception) {
-            Log.e("UserRepository", "Update profile error", e)
-        }
     }
 }

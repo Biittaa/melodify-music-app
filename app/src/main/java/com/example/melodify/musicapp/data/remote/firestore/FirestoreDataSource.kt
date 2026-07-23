@@ -1,5 +1,6 @@
 package com.melodify.musicapp.data.remote.firestore
 
+import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -25,12 +26,12 @@ class FirestoreDataSource @Inject constructor(
 
     // ==================== Users ====================
 
-    suspend fun createUser(user: User) {
-        firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
-            .document(user.id)
-            .set(user)
-            .await()
-    }
+//    suspend fun createUser(user: User) {
+//        firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+//            .document(user.id)
+//            .set(user)
+//            .await()
+//    }
 
     suspend fun getUser(userId: String): User? {
         return firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
@@ -40,28 +41,28 @@ class FirestoreDataSource @Inject constructor(
             .toObject<User>()
     }
 
-    suspend fun searchUsers(query:String):List<User>{
-
-        val q = query.lowercase()
-
-        val snapshot =
-            firestore.collection("users")
-                .whereGreaterThanOrEqualTo(
-                    "usernameSearch",
-                    q
-                )
-                .whereLessThanOrEqualTo(
-                    "usernameSearch",
-                    q+"\uf8ff"
-                )
-                .get()
-                .await()
-
-
-        return snapshot.documents.mapNotNull {
-            it.toObject(User::class.java)
-        }
-    }
+//    suspend fun searchUsers(query:String):List<User>{
+//
+//        val q = query.lowercase()
+//
+//        val snapshot =
+//            firestore.collection("users")
+//                .whereGreaterThanOrEqualTo(
+//                    "usernameSearch",
+//                    q
+//                )
+//                .whereLessThanOrEqualTo(
+//                    "usernameSearch",
+//                    q+"\uf8ff"
+//                )
+//                .get()
+//                .await()
+//
+//
+//        return snapshot.documents.mapNotNull {
+//            it.toObject(User::class.java)
+//        }
+//    }
 
 
     suspend fun searchSongs(query:String):List<Song>{
@@ -356,5 +357,109 @@ class FirestoreDataSource @Inject constructor(
             .document(docId)
             .set(mapOf(userId to isTyping), com.google.firebase.firestore.SetOptions.merge())
             .await()
+    }
+
+//    suspend fun searchUsers(query: String): List<User> {
+//        if (query.isBlank()) return emptyList()
+//
+//        return try {
+//            // دریافت تمامی کاربران از کالکشن users
+//            val snapshot = firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+//                .get()
+//                .await()
+//
+//            // فیلتر کردن کاربران در سمت کلاینت (بدون حساسیت به حروف بزرگ/کوچک)
+//            snapshot.documents.mapNotNull { doc ->
+//                doc.toObject<User>()
+//            }.filter { user ->
+//                user.username.contains(query, ignoreCase = true) ||
+//                        user.fullName.contains(query, ignoreCase = true) ||
+//                        user.email.contains(query, ignoreCase = true)
+//            }
+//        } catch (e: Exception) {
+//            emptyList()
+//        }
+//    }
+
+    // 📁 app/src/main/java/com/example/melodify/musicapp/data/remote/firestore/FirestoreDataSource.kt
+
+//    suspend fun searchUsers(query: String): List<User> {
+//        val q = query.trim().lowercase()
+//        if (q.isEmpty()) return emptyList()
+//
+//        return try {
+//            // ۱. دریافت همه داکیومنت‌های کالکشن کاربران از فایربیس
+//            val snapshot = firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+//                .get()
+//                .await()
+//
+//            // ۲. فیلتر کردن کاربران بر اساس نام کاربری یا نام کامل (Case-Insensitive)
+//            snapshot.documents
+//                .mapNotNull { it.toObject<User>() }
+//                .filter { user ->
+//                    user.username.lowercase().contains(q) ||
+//                            user.fullName.lowercase().contains(q)
+//                }
+//        } catch (e: Exception) {
+//            Log.e("FirestoreDataSource", "Error searching users", e)
+//            emptyList()
+//        }
+//    }
+
+    // 📁 app/src/main/java/com/example/melodify/musicapp/data/remote/firestore/FirestoreDataSource.kt
+
+    suspend fun createUser(user: User) {
+        val userMap = mapOf(
+            "id" to user.id,
+            "username" to user.username,
+            "usernameSearch" to user.username.lowercase(),
+            "fullName" to user.fullName,
+            "fullNameSearch" to user.fullName.lowercase(),
+            "email" to user.email,
+            "profileImage" to user.profileImage,
+            "bio" to user.bio,
+            "followersCount" to user.followersCount,
+            "followingCount" to user.followingCount,
+            "playlistsCount" to user.playlistsCount,
+            "isPremium" to user.isPremium
+        )
+
+        firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+            .document(user.id)
+            .set(userMap)
+            .await()
+    }
+
+
+
+    suspend fun searchUsers(query: String): List<User> {
+        if (query.isBlank()) return emptyList()
+
+        val q = query.trim().lowercase()
+
+        return try {
+            // دریافت کاربران از کالکشن users
+            val snapshot = firestore.collection(Constants.FIREBASE_USERS_COLLECTION)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    // تبدیل به مدل User به همراه مقداردهی ID
+                    val user = doc.toObject(User::class.java)
+                    user?.copy(id = doc.id)
+                } catch (e: Exception) {
+                    null
+                }
+            }.filter { user ->
+                // فیلتر کردن بر اساس نام کاربری یا نام کامل در سمت کلاینت
+                user.username.lowercase().contains(q) ||
+                        user.fullName.lowercase().contains(q) ||
+                        user.email.lowercase().contains(q)
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreDataSource", "Error searching users in Firebase", e)
+            emptyList()
+        }
     }
 }
