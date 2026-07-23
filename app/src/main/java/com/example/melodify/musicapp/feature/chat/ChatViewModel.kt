@@ -30,12 +30,31 @@ class ChatViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
+    private val _otherUser = MutableStateFlow<User?>(null)
+    val otherUser: StateFlow<User?> = _otherUser.asStateFlow()
+
+
     private val _otherUserTyping = MutableStateFlow(false)
     val otherUserTyping: StateFlow<Boolean> = _otherUserTyping.asStateFlow()
 
     init {
         loadFollowedUsers()
     }
+
+    fun loadOtherUser(userId: String) {
+        viewModelScope.launch {
+            try {
+                val user = userRepository.getProfile(userId)
+                _otherUser.value = user
+            } catch (e: Exception) {
+                // اگر کاربر پیدا نشد، یک نام پیش‌فرض می‌گذاریم
+                _otherUser.value = User(id = userId, fullName = "User", username = "user")
+            }
+        }
+    }
+
+
+
 
     fun loadConversations() {
         viewModelScope.launch {

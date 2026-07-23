@@ -41,10 +41,16 @@ fun ChatScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val otherUser by viewModel.otherUser.collectAsState()
     val otherUserTyping by viewModel.otherUserTyping.collectAsState()
     var messageText by remember { mutableStateOf("") }
 
     LaunchedEffect(otherUserId) {
+        viewModel.observeMessages(otherUserId)
+    }
+
+    LaunchedEffect(otherUserId) {
+        viewModel.loadOtherUser(otherUserId) // لود اطلاعات پروفایل
         viewModel.observeMessages(otherUserId)
     }
 
@@ -58,7 +64,8 @@ fun ChatScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AsyncImage(
-                            model = "https://www.w3schools.com/howto/img_avatar.png",
+                            model = otherUser?.profileImage?.ifEmpty { "https://www.w3schools.com/howto/img_avatar.png" }
+                                ?: "https://www.w3schools.com/howto/img_avatar.png",
                             contentDescription = null,
                             modifier = Modifier
                                 .size(40.dp)
@@ -68,7 +75,7 @@ fun ChatScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "User ${otherUserId.take(8)}",
+                                text = otherUser?.fullName ?: "Loading...",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
