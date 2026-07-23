@@ -7,7 +7,10 @@ import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.domain.repository.PlaylistRepository
 import com.melodify.musicapp.domain.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,20 +41,19 @@ class PlaylistDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // Fetch actual playlist from repository
-                val playlists = playlistRepository.getUserPlaylists("any")
-                val playlist = playlists.find { it.id == playlistId }
-                
+                val allPlaylists = playlistRepository.getUserPlaylists("any")
+                val playlist = allPlaylists.find { it.id == playlistId }
+
                 val songs = playlistRepository.getPlaylistSongs(playlistId)
                 val allSongs = songRepository.searchSongs("")
-                
-                _uiState.update { 
+
+                _uiState.update {
                     it.copy(
-                        isLoading = false, 
-                        songs = songs, 
+                        isLoading = false,
+                        songs = songs,
                         playlist = playlist,
                         allAvailableSongs = allSongs.filter { s -> !songs.any { it.id == s.id } }
-                    ) 
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -86,14 +88,6 @@ class PlaylistDetailViewModel @Inject constructor(
         }
     }
 
-    fun addSong(songId: String) {
-        val playlistId = currentPlaylistId ?: return
-        viewModelScope.launch {
-            playlistRepository.addSong(playlistId, songId)
-            loadPlaylistDetails(playlistId)
-        }
-    }
-
     fun removeSong(songId: String) {
         val playlistId = currentPlaylistId ?: return
         viewModelScope.launch {
@@ -102,27 +96,20 @@ class PlaylistDetailViewModel @Inject constructor(
         }
     }
 
-    fun toggleShuffle(force: Boolean? = null) {
-        _uiState.update { it.copy(isShuffle = force ?: !it.isShuffle) }
+    fun toggleShuffle() {
+        val newState = !_uiState.value.isShuffle
+        _uiState.update { it.copy(isShuffle = newState) }
     }
 
-    fun moveSong(fromIndex: Int, toIndex: Int) {
-        _uiState.update { state ->
-            val newList = state.songs.toMutableList()
-            if (fromIndex in newList.indices && toIndex in newList.indices) {
-                val item = newList.removeAt(fromIndex)
-                newList.add(toIndex, item)
-                
-                // Persist new order
-                viewModelScope.launch {
-                    currentPlaylistId?.let { id ->
-                        playlistRepository.updateSongsOrder(id, newList.map { it.id })
-                    }
-                }
-
-                state.copy(songs = newList)
-            } else {
-                state
+    fun onDrop(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex) return
+        val currentList = _uiState.value.songs.toMutableList()
+        val item = currentList.removeAt(fromIndex)
+        currentList.add(toIndex, item)
+        _uiState.update { it.copy(songs = currentList) }
+        viewModelScope.launch {
+            currentPlaylistId?.let { id ->
+                playlistRepository.updateSongsOrder(id, currentList.map { it.id })
             }
         }
     }

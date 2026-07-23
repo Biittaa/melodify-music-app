@@ -1,5 +1,6 @@
 package com.melodify.musicapp.feature.playlists
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,17 +17,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.melodify.musicapp.domain.model.Song
 import com.melodify.musicapp.feature.player.PlayerViewModel
 import com.melodify.musicapp.feature.search.SearchResultItem
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -48,7 +46,7 @@ fun PlaylistDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.playlist?.title ?: "پلی‌لیست", fontWeight = FontWeight.Bold) },
+                title = { Text("Playlist", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -67,71 +65,112 @@ fun PlaylistDetailScreen(
                 CircularProgressIndicator()
             }
         } else {
-            val listState = rememberLazyListState()
-            
+            var draggingIndex by remember { mutableStateOf<Int?>(null) }
+
             LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
                     PlaylistHeader(
-                        title = uiState.playlist?.title ?: "پلی‌لیست",
+                        title = uiState.playlist?.title ?: "Playlist",
                         songsCount = uiState.songs.size,
                         isShuffle = uiState.isShuffle,
-                        onShuffleToggle = { 
+                        onShuffleToggle = { enable ->
                             viewModel.toggleShuffle()
-                            playerViewModel.toggleShuffle(true)
+                            playerViewModel.toggleShuffle(enable)
                         },
-                        onShuffleOff = { 
-                            viewModel.toggleShuffle(false)
-                            playerViewModel.toggleShuffle(false)
+                        onPlayAll = {
+                            if (uiState.songs.isNotEmpty()) {
+                                playerViewModel.playPlaylist(uiState.songs, 0)
+                            }
                         }
                     )
                 }
-                
-                itemsIndexed(uiState.songs, key = { _, song -> song.id }) { index, song ->
-                    Box(modifier = Modifier.animateItemPlacement()) {
+
+                itemsIndexed(
+                    items = uiState.songs,
+                    key = { _, song -> song.id }
+                ) { index, song ->
+                    val isDragging = draggingIndex == index
+
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                viewModel.removeSong(song.id)
+                                true
+                            } else false
+                        }
+                    )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false,
+                        backgroundContent = {
+                            val color by animateColorAsState(
+                                when (dismissState.targetValue) {
+                                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                                    else -> Color.Transparent
+                                }, label = "color"
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.White)
+                            }
+                        }
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    if (isDragging) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                    else Color.Transparent
+                                )
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DragHandle,
-                                contentDescription = "Reorder",
+                                contentDescription = "Drag to reorder",
                                 modifier = Modifier
                                     .padding(start = 16.dp)
-                                    .size(24.dp)
                                     .pointerInput(Unit) {
                                         detectDragGesturesAfterLongPress(
-                                            onDragStart = { },
+                                            onDragStart = { draggingIndex = index },
                                             onDrag = { change, dragAmount ->
                                                 change.consume()
-                                                val threshold = 50f
-                                                if (dragAmount.y > threshold && index < uiState.songs.size - 1) {
-                                                    viewModel.moveSong(index, index + 1)
-                                                } else if (dragAmount.y < -threshold && index > 0) {
-                                                    viewModel.moveSong(index, index - 1)
+                                                val currentDragging = draggingIndex ?: return@detectDragGesturesAfterLongPress
+                                                if (abs(dragAmount.y) > 30f) {
+                                                    val targetIndex = if (dragAmount.y < 0) {
+                                                        (currentDragging - 1).coerceAtLeast(0)
+                                                    } else {
+                                                        (currentDragging + 1).coerceAtMost(uiState.songs.size - 1)
+                                                    }
+                                                    if (targetIndex != currentDragging) {
+                                                        viewModel.onDrop(currentDragging, targetIndex)
+                                                        draggingIndex = targetIndex
+                                                    }
                                                 }
                                             },
-                                            onDragEnd = { }
+                                            onDragEnd = { draggingIndex = null },
+                                            onDragCancel = { draggingIndex = null }
                                         )
                                     }
                             )
-                            
-                            Box(modifier = Modifier.weight(1f)) {
-                                SearchResultItem(
-                                    song = song,
-                                    onClick = { 
-                                        playerViewModel.playPlaylist(uiState.songs, index)
-                                        onSongClick(song) 
-                                    }
-                                )
-                            }
-                            
-                            IconButton(onClick = { viewModel.removeSong(song.id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = Color.Gray)
-                            }
+
+                            SearchResultItem(
+                                song = song,
+                                onClick = {
+                                    playerViewModel.playPlaylist(uiState.songs, index)
+                                    onSongClick(song)
+                                }
+                            )
                         }
                     }
                 }
@@ -165,31 +204,31 @@ fun AddSongsSheetContent(
     onAddClick: () -> Unit
 ) {
     val filteredSongs = remember(uiState.allAvailableSongs, uiState.searchQuery) {
-        uiState.allAvailableSongs.filter { 
-            it.title.contains(uiState.searchQuery, ignoreCase = true) 
+        uiState.allAvailableSongs.filter {
+            it.title.contains(uiState.searchQuery, ignoreCase = true)
         }
     }
 
     Column(modifier = Modifier.fillMaxHeight(0.8f).padding(16.dp)) {
         Text(
-            "افزودن آهنگ به پلی‌لیست", 
-            style = MaterialTheme.typography.titleLarge, 
+            "Add Songs to Playlist",
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         OutlinedTextField(
             value = uiState.searchQuery,
             onValueChange = onSearchQueryChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("جستجو آهنگ...") },
+            placeholder = { Text("Search songs...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             shape = RoundedCornerShape(12.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         LazyColumn(modifier = Modifier.weight(1f)) {
             items(filteredSongs) { song ->
                 val isSelected = uiState.selectedSongIds.contains(song.id)
@@ -208,13 +247,13 @@ fun AddSongsSheetContent(
                 }
             }
         }
-        
+
         Button(
             onClick = onAddClick,
             modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
             enabled = uiState.selectedSongIds.isNotEmpty()
         ) {
-            Text("افزودن (${uiState.selectedSongIds.size})")
+            Text("Add (${uiState.selectedSongIds.size})")
         }
     }
 }
@@ -224,18 +263,16 @@ fun PlaylistHeader(
     title: String,
     songsCount: Int,
     isShuffle: Boolean,
-    onShuffleToggle: () -> Unit,
-    onShuffleOff: () -> Unit
+    onShuffleToggle: (Boolean) -> Unit,
+    onPlayAll: () -> Unit
 ) {
-    var lastClickTime by remember { mutableStateOf(0L) }
-
     Column(
         modifier = Modifier.fillMaxWidth().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "پلی‌لیست", 
-            style = MaterialTheme.typography.labelLarge, 
+            text = "Playlist",
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
@@ -246,32 +283,46 @@ fun PlaylistHeader(
             color = MaterialTheme.colorScheme.secondaryContainer
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.LibraryMusic, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    Icons.Default.LibraryMusic,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(text = "$songsCount آهنگ", color = Color.Gray)
-        
+        Text(text = "$songsCount songs", color = Color.Gray)
+
         Button(
-            onClick = { 
-                val currentTime = System.currentTimeMillis()
-                if (currentTime - lastClickTime < 500) {
-                    onShuffleOff()
-                } else {
-                    onShuffleToggle()
-                }
-                lastClickTime = currentTime
-            },
-            modifier = Modifier.padding(top = 16.dp).fillMaxWidth(),
+            onClick = onPlayAll,
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Icon(Icons.Default.PlayArrow, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Play All")
+        }
+
+        Button(
+            onClick = { onShuffleToggle(!isShuffle) },
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .fillMaxWidth(),
             shape = MaterialTheme.shapes.medium,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isShuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
             )
         ) {
-            Icon(if (isShuffle) Icons.Default.ShuffleOn else Icons.Default.Shuffle, contentDescription = null)
+            Icon(
+                if (isShuffle) Icons.Default.ShuffleOn else Icons.Default.Shuffle,
+                contentDescription = null
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isShuffle) "پخش در حالت اتفاقی روشن" else "پخش اتفاقی")
+            Text(if (isShuffle) "Shuffle On" else "Shuffle Off")
         }
     }
 }

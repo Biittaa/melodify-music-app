@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import com.melodify.musicapp.data.local.entity.PlaylistSongEntity
 import com.melodify.musicapp.domain.model.Playlist
 import com.melodify.musicapp.domain.model.Song
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for playlist management
@@ -74,4 +75,5 @@ interface PlaylistRepository {
      * @return PagingSource for handling pagination
      */
     fun getPlaylistSongsPaging(playlistId: String): PagingSource<Int, PlaylistSongEntity>
+    fun getUserPlaylistsFlow(userId: String): Flow<List<Playlist>>
 }

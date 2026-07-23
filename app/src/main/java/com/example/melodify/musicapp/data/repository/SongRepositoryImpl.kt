@@ -80,9 +80,15 @@ class SongRepositoryImpl @Inject constructor(
 
     override suspend fun getSongsByIds(songIds: List<String>): List<Song> {
         val allAvailable = getLocalSongs() + MockData.songs
-        val matched = songIds.mapNotNull { id -> allAvailable.find { it.id == id } }
         
-        // If some are missing, could potentially fetch from remote if needed
+        val matched = songIds.mapNotNull { id ->
+            allAvailable.find { it.id == id } ?: try {
+                firestoreDataSource.getSong(id)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
         return applyLikeStatus(matched)
     }
 

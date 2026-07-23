@@ -6,9 +6,20 @@ import com.melodify.musicapp.core.common.CurrentUserProvider
 import com.melodify.musicapp.domain.model.Playlist
 import com.melodify.musicapp.domain.repository.PlaylistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class PlaylistUiState(
+    val userPlaylists: List<Playlist> = emptyList(),
+    val internalMusic: List<Playlist> = emptyList(),
+    val globalMusic: List<Playlist> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 @HiltViewModel
 class PlaylistViewModel @Inject constructor(
@@ -23,29 +34,31 @@ class PlaylistViewModel @Inject constructor(
         loadPlaylists()
     }
 
+    fun refresh() {
+        loadPlaylists()
+    }
+
     private fun loadPlaylists() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val userId = currentUserProvider.getCurrentUser()?.id ?: "local_user"
-                val userPlaylists = playlistRepository.getUserPlaylists(userId)
 
-                val internal = listOf(
-                    Playlist("i1", "پاپ فارسی", "مجموعه آهنگ‌های پاپ", "", "system", 12, true),
-                    Playlist("i2", "سنتی", "موسیقی اصیل ایرانی", "", "system", 8, true)
-                )
-                val global = listOf(
-                    Playlist("g1", "Global Top 50", "World's most played", "", "system", 50, true),
-                    Playlist("g2", "Rock Classics", "Best of Rock", "", "system", 30, true)
-                )
+                playlistRepository.getUserPlaylistsFlow(userId).collect { allPlaylists ->
+                    // Categorize: ownerId != "system" -> user defined; id starts with "i" -> internal; starts with "g" -> global
+                    val user = allPlaylists.filter { it.ownerId != "system" }
+                    val internal = allPlaylists.filter { it.id.startsWith("i") }
+                    val global = allPlaylists.filter { it.id.startsWith("g") }
 
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        userPlaylists = userPlaylists,
-                        internalMusic = internal,
-                        globalMusic = global
-                    )
+                    _uiState.update {
+                        it.copy(
+                            userPlaylists = user,
+                            internalMusic = internal,
+                            globalMusic = global,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -55,43 +68,32 @@ class PlaylistViewModel @Inject constructor(
 
     fun createPlaylist(name: String, onResult: (Boolean, String) -> Unit) {
         if (_uiState.value.userPlaylists.any { it.title.equals(name, ignoreCase = true) }) {
-            onResult(false, "پلی‌لیستی با این نام وجود دارد")
+            onResult(false, "A playlist with this name already exists")
             return
         }
         viewModelScope.launch {
             playlistRepository.createPlaylist(name)
-            loadPlaylists()
-            onResult(true, "پلی‌لیست ایجاد شد")
+            onResult(true, "Playlist created")
         }
     }
 
     fun deletePlaylist(playlistId: String) {
         viewModelScope.launch {
             playlistRepository.deletePlaylist(playlistId)
-            loadPlaylists()
         }
     }
 
     fun renamePlaylist(playlistId: String, newName: String, onResult: (Boolean, String) -> Unit) {
         if (_uiState.value.userPlaylists.any { it.title.equals(newName, ignoreCase = true) && it.id != playlistId }) {
-            onResult(false, "پلی‌لیستی با این نام وجود دارد")
+            onResult(false, "A playlist with this name already exists")
             return
         }
         viewModelScope.launch {
             val playlist = _uiState.value.userPlaylists.find { it.id == playlistId }
             if (playlist != null) {
                 playlistRepository.updatePlaylist(playlist.copy(title = newName))
-                loadPlaylists()
-                onResult(true, "نام پلی‌لیست تغییر کرد")
+                onResult(true, "Playlist renamed")
             }
         }
     }
 }
-
-data class PlaylistUiState(
-    val userPlaylists: List<Playlist> = emptyList(),
-    val internalMusic: List<Playlist> = emptyList(),
-    val globalMusic: List<Playlist> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)

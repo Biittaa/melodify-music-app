@@ -43,9 +43,14 @@ fun PlaylistsScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    // Refresh playlist list when screen is shown
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     if (showCreateDialog) {
         PlaylistInputDialog(
-            title = "ساخت پلی‌لیست جدید",
+            title = "Create New Playlist",
             onDismiss = { showCreateDialog = false },
             onConfirm = { name ->
                 viewModel.createPlaylist(name) { success, message ->
@@ -59,7 +64,7 @@ fun PlaylistsScreen(
     if (showRenameDialog && selectedPlaylistId != null) {
         val currentName = uiState.userPlaylists.find { it.id == selectedPlaylistId }?.title ?: ""
         PlaylistInputDialog(
-            title = "تغییر نام پلی‌لیست",
+            title = "Rename Playlist",
             initialValue = currentName,
             onDismiss = { showRenameDialog = false },
             onConfirm = { newName ->
@@ -77,17 +82,17 @@ fun PlaylistsScreen(
     if (showDeleteConfirm && selectedPlaylistId != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("حذف پلی‌لیست") },
-            text = { Text("آیا از حذف این پلی‌لیست اطمینان دارید؟") },
+            title = { Text("Delete Playlist") },
+            text = { Text("Are you sure you want to delete this playlist?") },
             confirmButton = {
                 Button(onClick = {
                     viewModel.deletePlaylist(selectedPlaylistId!!)
                     selectedPlaylistId = null
                     showDeleteConfirm = false
-                }) { Text("بله") }
+                }) { Text("Yes") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("خیر") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("No") }
             }
         )
     }
@@ -142,11 +147,11 @@ fun PlaylistsScreen(
                     )
                 }
             }
-            item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی داخلی") }
+            item(span = { GridItemSpan(2) }) { SectionHeader(title = "Internal Music") }
             items(uiState.internalMusic) { playlist ->
                 PlaylistItem(playlist = playlist, isSelected = false, onClick = { onPlaylistClick(playlist) }, onLongClick = {})
             }
-            item(span = { GridItemSpan(2) }) { SectionHeader(title = "موسیقی جهان") }
+            item(span = { GridItemSpan(2) }) { SectionHeader(title = "Global Music") }
             items(uiState.globalMusic) { playlist ->
                 PlaylistItem(playlist = playlist, isSelected = false, onClick = { onPlaylistClick(playlist) }, onLongClick = {})
             }
@@ -169,15 +174,15 @@ fun PlaylistInputDialog(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("نام پلی‌لیست") },
+                label = { Text("Playlist name") },
                 modifier = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
-            Button(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("ذخیره") }
+            Button(onClick = { if (name.isNotBlank()) onConfirm(name) }) { Text("Save") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("انصراف") }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
 }
@@ -219,7 +224,7 @@ fun PlaylistItem(
             }
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(text = playlist.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, maxLines = 1)
-                Text(text = "${playlist.songsCount} آهنگ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Text(text = "${playlist.songsCount} songs", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
     }
