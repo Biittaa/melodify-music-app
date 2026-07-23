@@ -15,3 +15,4 @@ interface RecentSongDao {
     @Query("DELETE FROM recent_songs WHERE songId = :songId")
     suspend fun deleteRecentSong(songId: String)
 }
+

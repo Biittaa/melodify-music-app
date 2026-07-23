@@ -217,4 +217,7 @@ class SongRepositoryImpl @Inject constructor(
         val combined = (remote + local + mock).distinctBy { it.id }
         return applyLikeStatus(combined)
     }
+    override suspend fun deleteRecentSong(songId: String) {
+        recentSongDao.deleteRecentSong(songId)
+    }
 }

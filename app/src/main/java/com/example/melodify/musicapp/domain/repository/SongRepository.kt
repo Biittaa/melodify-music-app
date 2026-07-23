@@ -22,4 +22,5 @@ interface SongRepository {
     suspend fun getLocalMusic(): List<Song>
     suspend fun recordSongPlay(songId: String)
     suspend fun getSongsByArtist(artistId: String): List<Song>
+    suspend fun deleteRecentSong(songId: String)
 }
