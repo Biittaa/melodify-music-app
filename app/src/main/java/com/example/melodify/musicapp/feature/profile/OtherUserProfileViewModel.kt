@@ -54,16 +54,36 @@ class OtherUserProfileViewModel @Inject constructor(
     }
 
 
+//    fun followUser(userId: String) {
+//        viewModelScope.launch {
+//            try {
+//                userRepository.follow(userId)
+//                _uiState.update { state ->
+//                    state.user?.let { currentUser ->
+//                        state.copy(user = currentUser.copy(
+//                            isFollowing = true,
+//                            followersCount = currentUser.followersCount + 1
+//                        ))
+//                    } ?: state
+//                }
+//            } catch (e: Exception) {
+//                Log.e("OtherUserProfile", "Error following user", e)
+//            }
+//        }
+//    }
+
     fun followUser(userId: String) {
         viewModelScope.launch {
             try {
                 userRepository.follow(userId)
                 _uiState.update { state ->
                     state.user?.let { currentUser ->
-                        state.copy(user = currentUser.copy(
-                            isFollowing = true,
-                            followersCount = currentUser.followersCount + 1
-                        ))
+                        state.copy(
+                            user = currentUser.copy(
+                                isFollowing = true,
+                                followersCount = currentUser.followersCount + 1
+                            )
+                        )
                     } ?: state
                 }
             } catch (e: Exception) {
@@ -78,10 +98,12 @@ class OtherUserProfileViewModel @Inject constructor(
                 userRepository.unfollow(userId)
                 _uiState.update { state ->
                     state.user?.let { currentUser ->
-                        state.copy(user = currentUser.copy(
-                            isFollowing = false,
-                            followersCount = currentUser.followersCount - 1
-                        ))
+                        state.copy(
+                            user = currentUser.copy(
+                                isFollowing = false,
+                                followersCount = (currentUser.followersCount - 1).coerceAtLeast(0)
+                            )
+                        )
                     } ?: state
                 }
             } catch (e: Exception) {
@@ -89,4 +111,22 @@ class OtherUserProfileViewModel @Inject constructor(
             }
         }
     }
+
+//    fun unfollowUser(userId: String) {
+//        viewModelScope.launch {
+//            try {
+//                userRepository.unfollow(userId)
+//                _uiState.update { state ->
+//                    state.user?.let { currentUser ->
+//                        state.copy(user = currentUser.copy(
+//                            isFollowing = false,
+//                            followersCount = currentUser.followersCount - 1
+//                        ))
+//                    } ?: state
+//                }
+//            } catch (e: Exception) {
+//                Log.e("OtherUserProfile", "Error unfollowing user", e)
+//            }
+//        }
+//    }
 }

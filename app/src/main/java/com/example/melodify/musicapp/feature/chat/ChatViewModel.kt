@@ -83,11 +83,25 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun loadFollowedUsers() {
+//    private fun loadFollowedUsers() {
+//        viewModelScope.launch {
+//            val currentUser = currentUserProvider.getCurrentUser()
+//            if (currentUser != null) {
+//                val following = userRepository.getUserFollowing(currentUser.id)
+//                _uiState.update { it.copy(followedUsers = following) }
+//            }
+//        }
+//    }
+
+    fun loadFollowedUsers() {
         viewModelScope.launch {
             val currentUser = currentUserProvider.getCurrentUser()
             if (currentUser != null) {
                 val following = userRepository.getUserFollowing(currentUser.id)
+                _uiState.update { it.copy(followedUsers = following) }
+            } else {
+                // در صورت عدم وجود کاربر لاگین شده، لیست کاربران فالو شده موک استفاده می‌شود
+                val following = userRepository.getUserFollowing("local_user")
                 _uiState.update { it.copy(followedUsers = following) }
             }
         }

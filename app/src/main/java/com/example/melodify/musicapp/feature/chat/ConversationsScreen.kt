@@ -62,7 +62,10 @@ fun ConversationsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showStartChat = true }) {
+                    IconButton(onClick = {
+                        viewModel.loadFollowedUsers() // لیست کاربران فالوشده را دوباره لود می‌کند
+                        showStartChat = true
+                    }) {
                         Icon(Icons.Default.Add, contentDescription = "New Chat")
                     }
                 }
