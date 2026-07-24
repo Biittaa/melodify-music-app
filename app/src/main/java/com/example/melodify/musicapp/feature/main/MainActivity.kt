@@ -78,11 +78,6 @@ class MainActivity : AppCompatActivity(){
                 }
             }
 
-//            MelodifyTheme(
-//                darkTheme = settings?.darkMode ?: false
-//            ) {
-//                MainScreen()
-//            }
         }
     }
 }
