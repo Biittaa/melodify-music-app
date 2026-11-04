@@ -1,0 +1,116 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace "com.melodify.musicapp"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.melodify.musicapp"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    // ---------- Compose (BOM) ----------
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.runtime
+    implementation libs.androidx.compose.animation
+
+    // ---------- Material Icons Extended (fixes icons) ----------
+    implementation libs.androidx.compose.material.icons.extended
+
+    // ---------- AndroidX ----------
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.lifecycle.runtime.compose
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.navigation.compose
+    implementation libs.androidx.transition
+
+    // ---------- Room ----------
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    kapt libs.androidx.room.compiler
+
+    // ---------- WorkManager ----------
+    implementation libs.androidx.work.runtime.ktx
+
+    // ---------- ExoPlayer & MediaSession ----------
+    implementation libs.com.google.exoplayer.core
+    implementation libs.com.google.exoplayer.mediasession
+    implementation libs.com.google.exoplayer.ui
+
+    // ---------- Coil ----------
+    implementation "io.coil-kt:coil-compose:2.5.0"
+
+    // ---------- Hilt ----------
+    implementation libs.dagger.hilt.android
+    kapt libs.dagger.hilt.android.compiler
+
+    // ---------- Hilt Navigation Compose (fixes hiltViewModel) ----------
+    implementation libs.androidx.hilt.navigation.compose
+
+    // ---------- Paging ----------
+    implementation libs.androidx.paging.compose
+
+    // ---------- DataStore Preferences (fixes Preferences, DataStore) ----------
+    implementation libs.androidx.datastore.preferences
+
+    // ---------- Palette (fixes Palette) ----------
+    implementation libs.androidx.palette
+
+    // ---------- Firebase ----------
+    implementation libs.google.firebase.auth
+    implementation libs.google.firebase.firestore
+    implementation libs.google.firebase.storage
+
+    // ---------- Material Components (fixes theme errors) ----------
+    implementation libs.androidx.appcompat
+    implementation libs.material
+
+    // ---------- Testing ----------
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    debugImplementation libs.androidx.compose.ui.tooling
+}
+
+kapt {
+    correctErrorTypes true
+}

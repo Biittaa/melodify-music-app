@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "745676341445",
+    "project_id": "melodyfi-music-app",
+    "storage_bucket": "melodyfi-music-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745676341445:android:4a44579ef8fadc0a51f0ac",
+        "android_client_info": {
+          "package_name": "com.melodify.musicapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6x_xQW-zqKsajc4rSuqOmIYtDojhwqAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
